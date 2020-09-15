@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Script_Transparency_Manager : MonoBehaviour {
-
     /*
     * ENUMS
     */
@@ -35,11 +34,9 @@ public class Script_Transparency_Manager : MonoBehaviour {
      public EnumWallType wallType;
     [Range(0f, 360f)] private float northDirection;
 
-
     [Header("Set Wall Opacity")]
     [Tooltip("Default value should be 30")]
     [Range(0f, 100f)] public int customOpacity;
-
 
     private float myDirection;
     private float dif;
@@ -61,6 +58,30 @@ public class Script_Transparency_Manager : MonoBehaviour {
         /*
         * Conditions to make which walls transparent
         */
+        CheckWallStatus();
+     }
+    /*
+    * Get direction
+    */
+    private void GetDirection(){
+        myDirection = transform.eulerAngles.y;
+        northDirection = Input.compass.magneticHeading;
+
+        dif = myDirection - northDirection;
+        if (dif < 0) dif += 360f;
+
+        if (dif > 45 && dif <= 135) {
+            cardinalDirection = Direction.East;
+        } else if (dif > 135 && dif <= 225) {
+            cardinalDirection = Direction.South;
+        } else if (dif > 225 && dif <= 315) {
+            cardinalDirection = Direction.West;
+        } else {
+            cardinalDirection = Direction.North;
+        }
+    }
+
+    private void CheckWallStatus(){
         if (cardinalDirection.ToString() == "North" && wallType.ToString() == "North") {
             MakeTransparent();
         }
@@ -84,26 +105,6 @@ public class Script_Transparency_Manager : MonoBehaviour {
         }
         if (cardinalDirection.ToString() == "West" && wallType.ToString() == "West") {
             MakeTransparent();
-        }
-     }
-    /*
-    * Get direction
-    */
-    private void GetDirection(){
-        myDirection = transform.eulerAngles.y;
-        northDirection = Input.compass.magneticHeading;
-
-        dif = myDirection - northDirection;
-        if (dif < 0) dif += 360f;
-
-        if (dif > 45 && dif <= 135) {
-            cardinalDirection = Direction.East;
-        } else if (dif > 135 && dif <= 225) {
-            cardinalDirection = Direction.South;
-        } else if (dif > 225 && dif <= 315) {
-            cardinalDirection = Direction.West;
-        } else {
-            cardinalDirection = Direction.North;
         }
     }
 
