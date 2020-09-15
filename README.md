@@ -1,3 +1,3 @@
 # Heartdrop Games 點心遊戲 Unity Tools
 
-UnityEditor tools I've made for Heartdrop Games. They are simply c# files that you can drag and drop into your editor to load it in.
+A collection of standalone scripts I've made for Heartdrop Games. The game they're made for an orthographic game where rooms are randomly generated. More info to come when the game is revealed at the end of September.
