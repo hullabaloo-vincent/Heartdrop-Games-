@@ -33,7 +33,6 @@ public class Script_Transparency_Manager : MonoBehaviour {
      //display values in the inspector
     [Header("Select Wall Type")]
      public EnumWallType wallType;
-
     [Range(0f, 360f)] private float northDirection;
 
 
@@ -58,21 +57,7 @@ public class Script_Transparency_Manager : MonoBehaviour {
         /*
         * Note the direction of the wall based on the cardinal direction
         */
-        myDirection = transform.eulerAngles.y;
-        northDirection = Input.compass.magneticHeading;
-
-        dif = myDirection - northDirection;
-        if (dif < 0) dif += 360f;
-
-        if (dif > 45 && dif <= 135) {
-            cardinalDirection = Direction.East;
-        } else if (dif > 135 && dif <= 225) {
-            cardinalDirection = Direction.South;
-        } else if (dif > 225 && dif <= 315) {
-            cardinalDirection = Direction.West;
-        } else {
-            cardinalDirection = Direction.North;
-        }
+        GetDirection();
         /*
         * Conditions to make which walls transparent
         */
@@ -101,6 +86,26 @@ public class Script_Transparency_Manager : MonoBehaviour {
             MakeTransparent();
         }
      }
+    /*
+    * Get direction
+    */
+    private void GetDirection(){
+        myDirection = transform.eulerAngles.y;
+        northDirection = Input.compass.magneticHeading;
+
+        dif = myDirection - northDirection;
+        if (dif < 0) dif += 360f;
+
+        if (dif > 45 && dif <= 135) {
+            cardinalDirection = Direction.East;
+        } else if (dif > 135 && dif <= 225) {
+            cardinalDirection = Direction.South;
+        } else if (dif > 225 && dif <= 315) {
+            cardinalDirection = Direction.West;
+        } else {
+            cardinalDirection = Direction.North;
+        }
+    }
 
     /*
     * Code to change the blend modes
