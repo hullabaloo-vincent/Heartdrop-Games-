@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class Script_Transparency_Manager : MonoBehaviour {
 
-    List<GameObject> wallAssets;
+    /*
+    * ENUMS
+    */
+    //what type of wall it is natively facing
     public enum EnumWallType {
          North,
          South,
@@ -13,10 +16,25 @@ public class Script_Transparency_Manager : MonoBehaviour {
          Outer,
          Door
      }
+     //the directions that wall can face
+     public enum Direction {
+        North,
+        East,
+        South,
+        West
+    }
+    //the blendmodes that materials can be changed to
+    public enum BlendMode {
+         Opaque,
+         Cutout,
+         Fade,
+         Transparent
+     }
+     //display values in the inspector
     [Header("Select Wall Type")]
      public EnumWallType wallType;
 
-    [Range(0f, 360f)] private float northHeading;
+    [Range(0f, 360f)] private float northDirection;
 
 
     [Header("Set Wall Opacity")]
@@ -24,24 +42,69 @@ public class Script_Transparency_Manager : MonoBehaviour {
     [Range(0f, 100f)] public int customOpacity;
 
 
-    private float myHeading;
+    private float myDirection;
     private float dif;
-    private Heading heading;
+    private Direction cardinalDirection;
 
-    public enum Heading {
-        North,
-        East,
-        South,
-        West
-    }
+    List<GameObject> wallAssets;
 
-    public enum BlendMode {
-         Opaque,
-         Cutout,
-         Fade,
-         Transparent
+     void Start(){
+        //get list of children assets
+        wallAssets = new List<GameObject>();
+        for (int i = 0; i < transform.childCount; i++) {
+            wallAssets.Add(transform.GetChild(i).gameObject);
+        }
+
+        /*
+        * Note the direction of the wall based on the cardinal direction
+        */
+        myDirection = transform.eulerAngles.y;
+        northDirection = Input.compass.magneticHeading;
+
+        dif = myDirection - northDirection;
+        if (dif < 0) dif += 360f;
+
+        if (dif > 45 && dif <= 135) {
+            cardinalDirection = Direction.East;
+        } else if (dif > 135 && dif <= 225) {
+            cardinalDirection = Direction.South;
+        } else if (dif > 225 && dif <= 315) {
+            cardinalDirection = Direction.West;
+        } else {
+            cardinalDirection = Direction.North;
+        }
+        /*
+        * Conditions to make which walls transparent
+        */
+        if (cardinalDirection.ToString() == "North" && wallType.ToString() == "North") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "North" && wallType.ToString() == "East") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "South" && wallType.ToString() == "South") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "South" && wallType.ToString() == "West") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "East" && wallType.ToString() == "South") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "East" && wallType.ToString() == "East") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "West" && wallType.ToString() == "North") {
+            MakeTransparent();
+        }
+        if (cardinalDirection.ToString() == "West" && wallType.ToString() == "West") {
+            MakeTransparent();
+        }
      }
- 
+
+    /*
+    * Code to change the blend modes
+    */
      public void ChangeRenderMode(Material standardShaderMaterial, BlendMode blendMode) {
          switch (blendMode) {
              case BlendMode.Opaque:
@@ -83,54 +146,6 @@ public class Script_Transparency_Manager : MonoBehaviour {
          }
      }
 
-     void Start(){
-        wallAssets = new List<GameObject>();
-        for (int i = 0; i < transform.childCount; i++) {
-            wallAssets.Add(transform.GetChild(i).gameObject);
-        }
-        myHeading = transform.eulerAngles.y;
-        northHeading = Input.compass.magneticHeading;
-
-        dif = myHeading - northHeading;
-        if (dif < 0) dif += 360f;
-
-        if (dif > 45 && dif <= 135) {
-            heading = Heading.East;
-        } else if (dif > 135 && dif <= 225) {
-            heading = Heading.South;
-        } else if (dif > 225 && dif <= 315) {
-            heading = Heading.West;
-        } else {
-            heading = Heading.North;
-        }
-     //   Debug.Log(gameObject.name + " Global Direction: " + heading.ToString());
-     //   Debug.Log(gameObject.name + " Local Direction: " + wallType.ToString());
-        if (heading.ToString() == "North" && wallType.ToString() == "North") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "North" && wallType.ToString() == "East") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "South" && wallType.ToString() == "South") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "South" && wallType.ToString() == "West") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "East" && wallType.ToString() == "South") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "East" && wallType.ToString() == "East") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "West" && wallType.ToString() == "North") {
-            MakeTransparent();
-        }
-        if (heading.ToString() == "West" && wallType.ToString() == "West") {
-            MakeTransparent();
-        }
-     }
-
      public void MakeTransparent(){
          //currentTask is for exception handling
          GameObject currentTask = null;
@@ -170,7 +185,7 @@ public class Script_Transparency_Manager : MonoBehaviour {
      public void MakeOpaque(){
          for (int i = 0; i < wallAssets.Count; i++){
             foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                Debug.Log("Changing materials: " + m.name);
+                //no need to chaneg alpha channel. The new blend mode will not use it
                 ChangeRenderMode (m, BlendMode.Opaque); 
             }
          }
