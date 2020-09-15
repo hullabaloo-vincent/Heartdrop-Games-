@@ -5,7 +5,6 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
 
 public class Script_Post_Update : MonoBehaviour {
-
     PostProcessVolume pp;
     ChromaticAberration ca;
     MotionBlur mb;

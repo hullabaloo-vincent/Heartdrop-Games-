@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Script_Spell_System : MonoBehaviour {
-
     public GameObject[] slots;
     public bool[] activeSlots;
     int selectedSpell;
