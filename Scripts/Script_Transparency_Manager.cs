@@ -11,9 +11,7 @@ public class Script_Transparency_Manager : MonoBehaviour {
          North,
          South,
          East,
-         West,
-         Outer,
-         Door
+         West
      }
      //the directions that wall can face
      public enum Direction {
@@ -43,6 +41,10 @@ public class Script_Transparency_Manager : MonoBehaviour {
     private Direction cardinalDirection;
 
     List<GameObject> wallAssets;
+    List<GameObject> wallAssetsFiltered = new List<GameObject>();
+
+    bool defaultStatus = true; //true = visible; false = invisible;
+    bool filteredAssets = false;
 
      void Start(){
         //get list of children assets
@@ -81,30 +83,44 @@ public class Script_Transparency_Manager : MonoBehaviour {
         }
     }
 
-    private void CheckWallStatus(){
+    public void ResetWallValues(){
+        if (defaultStatus){
+            MakeOpaque();
+        }
+    }
+
+    public void CheckWallStatus(){
         if (cardinalDirection.ToString() == "North" && wallType.ToString() == "North") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "North" && wallType.ToString() == "East") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "South" && wallType.ToString() == "South") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "South" && wallType.ToString() == "West") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "East" && wallType.ToString() == "South") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "East" && wallType.ToString() == "East") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "West" && wallType.ToString() == "North") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
         if (cardinalDirection.ToString() == "West" && wallType.ToString() == "West") {
-            MakeTransparent();
+            MakeTransparent(true);
+            defaultStatus = false;
         }
     }
 
@@ -151,23 +167,35 @@ public class Script_Transparency_Manager : MonoBehaviour {
                 break;
          }
      }
-
-     public void MakeTransparent(){
-         //currentTask is for exception handling
-         GameObject currentTask = null;
-         try {
+    public void GetAssets(){
+        wallAssets = new List<GameObject>();
+        for (int i = 0; i < transform.childCount; i++) {
+            wallAssets.Add(transform.GetChild(i).gameObject);
+        }
+    }
+     public void MakeTransparent(bool checkStatus){
+        //currentTask is for exception handling
+        GameObject currentTask = null;
+        try {
             for (int i = 0; i < wallAssets.Count; i++) {
                 currentTask = wallAssets[i];
+                //cull wall assets for transparent walls
+                if (wallAssets[i].name.Contains("KCWall") || !checkStatus){
                 //get a list of materials in gameobject and set each blendmode to transparent
-                foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                    ChangeRenderMode (m, BlendMode.Transparent);
-                    Color32 col = m.GetColor("_Color");
-                    col.a = (byte)customOpacity;
-                    m.SetColor("_Color", col);
+                    foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
+                        ChangeRenderMode (m, BlendMode.Transparent);
+                        Color32 col = m.GetColor("_Color");
+                        col.a = (byte)customOpacity;
+                        m.SetColor("_Color", col);
+                    }
+                } else {
+                    if (checkStatus){
+                        Destroy(wallAssets[i]);
+                    }
                 }
             }
-         } catch (MissingComponentException MCE) {
-             //get gameobject that caused the exception
+        } catch (MissingComponentException MCE) {
+            //get gameobject that caused the exception
             GameObject problemObject = currentTask;
 
             //get children of problem gameobject
@@ -185,15 +213,36 @@ public class Script_Transparency_Manager : MonoBehaviour {
                     m.SetColor("_Color", col);
                 }
             }
-         }
+        }
      }
 
      public void MakeOpaque(){
-         for (int i = 0; i < wallAssets.Count; i++){
-            foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                //no need to chaneg alpha channel. The new blend mode will not use it
-                ChangeRenderMode (m, BlendMode.Opaque); 
+        //currentTask is for exception handling
+        GameObject currentTask = null;
+        try {
+            for (int i = 0; i < wallAssets.Count; i++) {
+                currentTask = wallAssets[i];
+                //get a list of materials in gameobject and set each blendmode to opaque
+                foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
+                    ChangeRenderMode (m, BlendMode.Opaque); 
+                }
             }
-         }
+        } catch (MissingComponentException MCE) {
+            //get gameobject that caused the exception
+            GameObject problemObject = currentTask;
+
+            //get children of problem gameobject
+            List<GameObject> exceptionObject = new List<GameObject>();
+            for (int i = 0; i < problemObject.transform.childCount; i++) {
+                exceptionObject.Add(problemObject.transform.GetChild(i).gameObject);
+            }
+            //set its children to transparent
+            for (int i = 0; i < exceptionObject.Count; i++){
+                //get a list of materials in gameobject and set each blendmode to transparent
+                foreach (Material m in exceptionObject[i].GetComponent<Renderer>().materials){
+                    ChangeRenderMode (m, BlendMode.Opaque); 
+                }
+            }
+        }
      }
 }
