@@ -90,6 +90,7 @@ public class Script_Transparency_Manager : MonoBehaviour {
     }
 
     public void CheckWallStatus(){
+        
         if (cardinalDirection.ToString() == "North" && wallType.ToString() == "North") {
             MakeTransparent(true);
             defaultStatus = false;
