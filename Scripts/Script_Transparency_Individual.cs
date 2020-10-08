@@ -37,7 +37,7 @@ public class Script_Transparency_Individual : MonoBehaviour {
         GetDirection();
     }
 
-    void Update() {
+    void FixedUpdate() {
         if ((cardinalDirection.ToString() == "North" || 
             cardinalDirection.ToString() == "West") && !ReverseDirection && 
             wallType.ToString() == "North"){

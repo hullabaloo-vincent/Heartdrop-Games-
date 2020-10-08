@@ -224,8 +224,10 @@ public class Script_Transparency_Manager : MonoBehaviour {
             for (int i = 0; i < wallAssets.Count; i++) {
                 currentTask = wallAssets[i];
                 //get a list of materials in gameobject and set each blendmode to opaque
-                foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                    ChangeRenderMode (m, BlendMode.Opaque); 
+                if (wallAssets[i] != null){
+                    foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
+                        ChangeRenderMode (m, BlendMode.Opaque); 
+                    }
                 }
             }
         } catch (MissingComponentException MCE) {

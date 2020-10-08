@@ -34,6 +34,7 @@ public class Script_Room_Opacity : MonoBehaviour {
         }
         if (!isStartRoom){
             TransparentWalls();
+       //     RefreshRoomAssets();
             MakeTransparent();
         }
      }
@@ -84,7 +85,8 @@ public class Script_Room_Opacity : MonoBehaviour {
 
      public void RefreshRoomAssets(){
          roomAssets.Clear();
-         for (int i = 0; i < room.transform.childCount; i++) {
+         roomAssetsFiltered = new List<GameObject>();
+        for (int i = 0; i < room.transform.childCount; i++) {
             roomAssets.Add(room.transform.GetChild(i).gameObject);
         }
         MakeTransparent();
@@ -151,9 +153,11 @@ public class Script_Room_Opacity : MonoBehaviour {
 
      public void MakeOpaque(){
          for (int i = 0; i < roomAssetsFiltered.Count; i++){
-            foreach (Material m in roomAssetsFiltered[i].GetComponent<Renderer>().materials){
-                //no need to chaneg alpha channel. The new blend mode will not use it
-                ChangeRenderMode (m, BlendMode.Opaque); 
+            if (roomAssetsFiltered[i] != null){
+                foreach (Material m in roomAssetsFiltered[i].GetComponent<Renderer>().materials){
+                    //no need to chaneg alpha channel. The new blend mode will not use it
+                    ChangeRenderMode (m, BlendMode.Opaque); 
+                }
             }
          }
      }

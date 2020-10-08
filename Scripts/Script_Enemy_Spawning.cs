@@ -18,8 +18,8 @@ public class Script_Enemy_Spawning : MonoBehaviour{
 
     private void OnTriggerEnter(Collider other) {
         if (!spawnedEnemies) {
-            spawnedEnemies = true;
             if (other.tag == "Player") {
+                spawnedEnemies = true;
                 for (int i = 0; i < enemySpawns.Count; i++) {
                     Instantiate(Enemies[GetRandomWeightedIndex(EnemyWeights)], enemySpawns[i], transform.rotation);
                 }

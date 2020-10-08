@@ -165,7 +165,7 @@ public class Script_Player_Movement : MonoBehaviour {
         //attacking
         if (Input.GetMouseButtonDown(0)) {
             //666 = no spell selected, therefore the player will use melee
-            if (spellController.currentlySelected() == 666){
+            if (spellController.currentlySelected() == 666 && !anim.GetBool("isPunching")){
                 int punchChooser = Random.Range(1, 5);
                 resetAnimation();
                 anim.SetBool("isPunching", true);
@@ -236,7 +236,7 @@ public class Script_Player_Movement : MonoBehaviour {
         
         //if player is too far away from selected object, turn off marker
         if (enemySelection != null){
-            if (Vector3.Distance(enemySelection.transform.position, gameObject.transform.position) > 10f){
+            if (Vector3.Distance(enemySelection.transform.position, gameObject.transform.position) > 5f){
                 selectedEnemy = false;
                 enemyMarker.SetActive(false);
             }
@@ -304,21 +304,36 @@ public class Script_Player_Movement : MonoBehaviour {
 
             transform.rotation = Quaternion.LookRotation(newDirection);
         } else { 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 
-            RaycastHit hit;
-            int layerMask = LayerMask.GetMask("Ground");
-
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask)) {
-                Vector3 lookPos = hit.point;
-                lookPos.y = 0;
-                Vector3 targetDirection = hit.point - transform.position;
-                targetDirection.y = transform.position.y;
-                float singleStep = RotationDamping * Time.deltaTime;
-
-                Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
-
-                transform.rotation = Quaternion.LookRotation(newDirection);
+            //8-way rotation based on WASD keys
+            Vector3 angles = transform.eulerAngles;
+            Debug.Log(Input.GetAxis("HorizontalKey") + " : " + Input.GetAxis("VerticalKey"));
+            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 0){
+                angles = new Vector3(0f, 50f, 0f); //West
             }
+            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 0){
+                angles = new Vector3(0f, 240f, 0f); //East
+            }
+            if (Input.GetAxis("VerticalKey") == 1 && Input.GetAxis("HorizontalKey") == 0){
+                angles = new Vector3(0f, -45f, 0f); //North
+            }
+            if (Input.GetAxis("VerticalKey") == -1 && Input.GetAxis("HorizontalKey") == 0){
+                angles = new Vector3(0f, 130f, 0f); //South
+            }
+
+            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 1){
+                angles = new Vector3(0f, -28f, 0f); //NorthEast
+            }
+            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == -1){
+                angles = new Vector3(0f, 85f, 0f); //SouthEast
+            }
+            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 1){
+                angles = new Vector3(0f, -94f, 0f); //NorthWest
+            }
+            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == -1){
+                angles = new Vector3(0f, 156f, 0f); //NorthEast
+            }
+            float turningRate = 250f;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
         }
     }
     
