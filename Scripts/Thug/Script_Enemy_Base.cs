@@ -6,6 +6,7 @@ using UnityEngine.AI;
 public class Script_Enemy_Base : MonoBehaviour{
     private NavMeshAgent agent;
     GameObject player;
+    private Script_Player_Movement PlayerScript;
     Animator playerAnim;
 
     Dictionary<string, float> movementSpeeds; //collection of movment speed data
@@ -14,9 +15,15 @@ public class Script_Enemy_Base : MonoBehaviour{
     bool isUnderThreat = false;
     bool isBlocking = false;
 
+    List<GameObject> Team;
+
     System.Type enemyType;
 
+    GameObject ParentSpawn;
+
     void Start(){
+        //Init team list
+        Team = new List<GameObject>();
 
         //Get custom enemy script, which will always be the third element
         Component[] enemyComponents = gameObject.GetComponents(typeof(Component));
@@ -24,17 +31,50 @@ public class Script_Enemy_Base : MonoBehaviour{
 
         agent = gameObject.GetComponent<NavMeshAgent>();
         agent.stoppingDistance = 1.6f;
+
+        //Get player references
         player = GameObject.FindGameObjectWithTag("Player");
+        PlayerScript = player.GetComponent<Script_Player_Movement>();
         playerAnim = player.GetComponent<Animator>();
 
-        movementSpeeds = new Dictionary<string, float>(); //set movement speeds
+        //Set movement speeds
+        movementSpeeds = new Dictionary<string, float>();
         movementSpeeds.Add("walking", 1f);
         movementSpeeds.Add("running", 3f);
     }
 
+    //Get the Enemy Spawn gameobject for the room
+    public void SetSpawnActor(GameObject parent){
+        ParentSpawn = parent;
+    }
+    public GameObject GetSpawnActor(){
+        return ParentSpawn;
+    }
+
+    public void SetTeam(List<GameObject> t){
+        List<GameObject> temp = new List<GameObject>(t);
+        //remove self from team list
+        temp.Remove(gameObject);
+        Team = temp;
+    }
+
+    public List<GameObject> getTeam(){
+        return Team;
+    }
+
+    public void RemoveFromTeam(GameObject go){
+        Team.Remove(go);
+    }
+
+    public void AlertTeam(){
+        if (enemyType.ToString() == "Script_Enemy_Thug"){
+            //gameObject.GetComponent<Script_Enemy_Thug>().
+        }
+    }
+
     public void recieveDamage(float damage){
         if (enemyType.ToString() == "Script_Enemy_Thug"){
-            gameObject.GetComponent<Script_Enemy_Thug>().recieveDamage(damage);
+            gameObject.GetComponent<Script_Enemy_Thug>().RecieveDamage(damage);
         }
     }
 
@@ -57,6 +97,10 @@ public class Script_Enemy_Base : MonoBehaviour{
 
     public float getAngularSpeed() {
         return agent.angularSpeed;
+    }
+
+    public GameObject getPlayerFocus(){
+        return PlayerScript.focusedEnemy();
     }
 
     /* Tells enemy that a projectile threat will hit it */

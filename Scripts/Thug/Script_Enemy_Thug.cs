@@ -134,6 +134,11 @@ public class Script_Enemy_Thug : MonoBehaviour{
             if (isDodging) {
                 transform.Translate((transform.forward * -1) * 3f * Time.deltaTime);
             }
+
+            if (aiBase.getPlayerFocus() == null &&
+             Vector3.Distance(aiBase.getPlayerLocation(), gameObject.transform.position) <= 5f){
+                 aiBase.playerReferece().GetComponent<Script_Player_Movement>().setFocusEnemy(gameObject);
+            }
         }
     }
 
@@ -149,7 +154,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
         GameObject playerHit = Instantiate(kickObj, rightFoot.transform.position, rightFoot.transform.rotation);
     }
 
-    public void recieveDamage(float damage) {
+    public void RecieveDamage(float damage) {
         if (!isBlocking && !anim.GetBool("isDying")) {
             health -= damage;
             if (health > 0) {
@@ -170,10 +175,18 @@ public class Script_Enemy_Thug : MonoBehaviour{
                 Camera.main.GetComponentInParent<Script_Camera_Shake>().TriggerShake(0.5f);
                 anim.SetBool("isDying", true);
                 minimapObject.SetActive(false);
-                if (arrow.activeSelf){
-                    aiBase.playerReferece().GetComponent<Script_Player_Movement>().stopFocus();
-                }
+                aiBase.playerReferece().GetComponent<Script_Player_Movement>().stopFocus();
+                RemoveFromTeam();
             }
+        }
+    }
+    
+    private void RemoveFromTeam(){
+        //Remove room enemy count
+        aiBase.GetSpawnActor().GetComponent<Script_Enemy_Spawning>().RemoveFromList(gameObject);
+        for (int i = 0; i < aiBase.getTeam().Count; i++){
+            //Remove self from every team list
+            aiBase.getTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
         }
     }
 

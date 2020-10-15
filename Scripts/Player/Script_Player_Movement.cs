@@ -89,9 +89,9 @@ public class Script_Player_Movement : MonoBehaviour {
         
         //define movement speeds
         movementSpeeds = new Dictionary<string, float>(); //set movement speeds
-        movementSpeeds.Add("walking", 1f);
-        movementSpeeds.Add("running", 3f);
-        movementSpeeds.Add("dashing", 3f);
+        movementSpeeds.Add("walking", 2f);
+        movementSpeeds.Add("running", 6f);
+        movementSpeeds.Add("dashing", 6f);
 
         debugObj = GameObject.FindGameObjectWithTag("Debug");
 
@@ -202,43 +202,13 @@ public class Script_Player_Movement : MonoBehaviour {
         if (Input.GetMouseButtonDown(1)) {
             resetAnimation();
             anim.SetBool("isBlocking", true); 
-        }
-
-        //select enemy with middle mouse button
-        if (Input.GetMouseButtonDown(2)){
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            int layerMask = LayerMask.GetMask("Enemy");
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask)){
-                //if the tag of the gameobject is "Enemy", 
-                if (hit.collider.gameObject.tag.ToString() == "Enemy"){
-                    enemySelection = hit.collider.gameObject;
-                    for (int i = 0; i < enemySelection.transform.childCount - 1; i++) {
-                        Debug.Log(enemySelection.transform.GetChild(i).gameObject.name.ToString());
-                        if (enemySelection.transform.GetChild(i).gameObject.name.ToString() == "SelectionArrow") {
-                            if (enemyMarker == null) {
-                                enemyMarker = enemySelection.transform.GetChild(i).gameObject;
-                            } else {
-                                enemyMarker.SetActive(false);
-                                enemyMarker = enemySelection.transform.GetChild(i).gameObject;
-                            }
-                        }
-                    }
-                    selectedEnemy = true;
-                    enemyMarker.SetActive(true);
-                }
-            }else{
-                //if player presses the middle mouse button and doesn't select anything, turn off enemy selection
-                selectedEnemy = false;
-                enemyMarker.SetActive(false);
-            }
-        }
+        }        
         
         //if player is too far away from selected object, turn off marker
         if (enemySelection != null){
             if (Vector3.Distance(enemySelection.transform.position, gameObject.transform.position) > 5f){
                 selectedEnemy = false;
-                enemyMarker.SetActive(false);
+                enemySelection = null;
             }
         }
 
@@ -283,13 +253,18 @@ public class Script_Player_Movement : MonoBehaviour {
         //move character
         Vector3 rightMovement = right * tempMoveSpeed * Time.deltaTime * Input.GetAxis("HorizontalKey");
         Vector3 upMovement = forward * tempMoveSpeed * Time.deltaTime * Input.GetAxis("VerticalKey");
+        Vector3 playerMovement = rightMovement + upMovement;
 
         //moveCharacter if player only if they are using the walking or running animation
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") || anim.GetCurrentAnimatorStateInfo(0).IsName("WalkCombat") || anim.GetCurrentAnimatorStateInfo(0).IsName("Run") && (!anim.GetBool("isPunching") && !anim.GetBool("tookDamage"))) {
-            controller.Move(rightMovement);
-            controller.Move(upMovement);
-            controller.Move(rightMovement);
-            controller.Move(upMovement);
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") || 
+        anim.GetCurrentAnimatorStateInfo(0).IsName("WalkCombat") ||
+        anim.GetCurrentAnimatorStateInfo(0).IsName("WalkLeft") ||
+        anim.GetCurrentAnimatorStateInfo(0).IsName("WalkRight") || 
+        anim.GetCurrentAnimatorStateInfo(0).IsName("WalkBack") ||
+        anim.GetCurrentAnimatorStateInfo(0).IsName("Run") 
+        && (!anim.GetBool("isPunching") && 
+        !anim.GetBool("tookDamage"))) {
+            controller.Move(playerMovement);
         }
     }
     void RotateActor() {
@@ -306,31 +281,62 @@ public class Script_Player_Movement : MonoBehaviour {
         } else { 
             //8-way rotation based on WASD keys
             Vector3 angles = transform.eulerAngles;
-            Debug.Log(Input.GetAxis("HorizontalKey") + " : " + Input.GetAxis("VerticalKey"));
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 50f, 0f); //West
+                anim.SetBool("walkForward", false);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", true);
+                anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 240f, 0f); //East
+                anim.SetBool("walkForward", false);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", true);
             }
             if (Input.GetAxis("VerticalKey") == 1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, -45f, 0f); //North
+                anim.SetBool("walkForward", true);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("VerticalKey") == -1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, 130f, 0f); //South
+                anim.SetBool("walkForward", true);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
 
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -28f, 0f); //NorthEast
+                anim.SetBool("walkForward", true);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == -1){
                 angles = new Vector3(0f, 85f, 0f); //SouthEast
+                anim.SetBool("walkForward", false);
+                anim.SetBool("walkBack", true);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -94f, 0f); //NorthWest
+                anim.SetBool("walkForward", true);
+                anim.SetBool("walkBack", false);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == -1){
-                angles = new Vector3(0f, 156f, 0f); //NorthEast
+                angles = new Vector3(0f, 156f, 0f); //SouthWest
+                anim.SetBool("walkForward", false);
+                anim.SetBool("walkBack", true);
+                anim.SetBool("walkLeft", false);
+                anim.SetBool("walkRight", false);
             }
             float turningRate = 250f;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
@@ -339,7 +345,15 @@ public class Script_Player_Movement : MonoBehaviour {
     
     public void stopFocus(){
         selectedEnemy = false;
-        enemyMarker.SetActive(false);
+        enemySelection = null;
+    }
+
+    public GameObject focusedEnemy(){
+        return enemySelection;
+    }
+    public void setFocusEnemy(GameObject enemy){
+        enemySelection = enemy;
+        selectedEnemy = true;
     }
 
     //Called via animation event from Anim_Player_Punch
