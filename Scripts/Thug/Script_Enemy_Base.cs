@@ -21,7 +21,7 @@ public class Script_Enemy_Base : MonoBehaviour{
 
     GameObject ParentSpawn;
 
-    void Start(){
+    void Start() {
         //Init team list
         Team = new List<GameObject>();
 

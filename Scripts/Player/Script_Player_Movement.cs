@@ -20,7 +20,6 @@ public class Script_Player_Movement : MonoBehaviour {
 
     string activeSpell;
 
-
     GameObject debugObj; //for cursor
 
     Dictionary<string, float> movementSpeeds; //collection of movment speed data
