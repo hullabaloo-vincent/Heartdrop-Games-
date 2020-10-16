@@ -91,6 +91,7 @@ public class Script_Player_Movement : MonoBehaviour {
         movementSpeeds.Add("walking", 2f);
         movementSpeeds.Add("running", 6f);
         movementSpeeds.Add("dashing", 6f);
+        movementSpeeds.Add("attackPunch", 10f);
 
         debugObj = GameObject.FindGameObjectWithTag("Debug");
 
@@ -132,13 +133,15 @@ public class Script_Player_Movement : MonoBehaviour {
             anim.SetBool("isDashing", true);
             bool selectedDash = false;
             if (Input.GetAxis("HorizontalKey") == 1 && !selectedDash){
-                anim.SetBool("dashRight", true);
+               // anim.SetBool("dashRight", true);
+                anim.SetBool("dashForward", true);
                 selectedDash = true;
                 dashKeyName = "horizontal";
                 dashKeyValue = 1;
             }
             if (Input.GetAxis("HorizontalKey") == -1 && !selectedDash){
-                anim.SetBool("dashLeft", true);
+                //anim.SetBool("dashLeft", true);
+                anim.SetBool("dashForward", true);
                 selectedDash = true;
                 dashKeyName = "horizontal";
                 dashKeyValue = -1;
@@ -171,18 +174,23 @@ public class Script_Player_Movement : MonoBehaviour {
                 switch (punchChooser) {
                     case 1:
                         anim.SetBool("punch1", true);
+                        AttackForce(movementSpeeds["attackPunch"]);
                         break;
                     case 2:
                         anim.SetBool("punch2", true);
+                        AttackForce(movementSpeeds["attackPunch"]);
                         break;
                     case 3:
                         anim.SetBool("punch3", true);
+                        AttackForce(movementSpeeds["attackPunch"]);
                         break;
                     case 4:
                         anim.SetBool("punch4", true);
+                        AttackForce(movementSpeeds["attackPunch"]);
                         break;
                     case 5:
                         anim.SetBool("punch5", true);
+                        AttackForce(movementSpeeds["attackPunch"]);
                         break;
                 }
             } else {
@@ -361,6 +369,11 @@ public class Script_Player_Movement : MonoBehaviour {
     }
     public void punchLeft() {
         GameObject playerHit = Instantiate(punchObj, leftHand.transform.position, leftHand.transform.rotation);
+    }
+
+    private void AttackForce(float strength){
+        //Move the player a tiny bit forwared with an attack
+        controller.Move((transform.forward * 1) * strength * Time.deltaTime);
     }
 
     //recieve damage from enemies

@@ -15,6 +15,8 @@ public class Script_Enemy_Thug : MonoBehaviour{
 
     public GameObject arrow;
 
+    Rigidbody rd;
+
     public float health = 5f;
     float visibilityDistance = 7f;
     float visibilityDistance_multiplyer = 2f;
@@ -23,10 +25,12 @@ public class Script_Enemy_Thug : MonoBehaviour{
     bool blockDecision = false;
     bool midPunch = false;
     bool isDodging = false;
+    bool CanRecieveDamage = true;
 
     void Start(){
         anim = GetComponent<Animator>();
         aiBase = GetComponent<Script_Enemy_Base>();
+        rd = GetComponent<Rigidbody>();
         rightHand = gameObject.transform.Find(
             "Thug_rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
             ).gameObject; //get reference to right hand
@@ -72,6 +76,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
                     !anim.GetBool("isAttacking")) {
                     resetAnimation();
                     anim.SetBool("isIdle", true);
+                    ResetKinematics();
                 }
 
                 /*
@@ -120,6 +125,8 @@ public class Script_Enemy_Thug : MonoBehaviour{
                        // Debug.Log("Blocking with: " + blockChooser);
                         if (aiBase.canSeePlayer()) {
                             resetAnimation();
+                            //turn off physics forces
+                            //SetRigidBodyKinematic(true);
                             if (blockChooser <= 2) {
                                 anim.SetBool("isBlocking", true);
                                 anim.SetBool("isDodging", false);
@@ -155,10 +162,11 @@ public class Script_Enemy_Thug : MonoBehaviour{
     }
 
     public void RecieveDamage(float damage) {
-        if (!isBlocking && !anim.GetBool("isDying")) {
+        if (!isBlocking && !anim.GetBool("isDying") && CanRecieveDamage) {
             health -= damage;
             if (health > 0) {
                 resetAnimation();
+                CanRecieveDamage = false;
                 if (damage > 2f) {
                     anim.SetBool("tookDamage_heavy", true);
                     Camera.main.GetComponentInParent<Script_Camera_Shake>().TriggerShake(0.3f);
@@ -178,9 +186,28 @@ public class Script_Enemy_Thug : MonoBehaviour{
                 aiBase.playerReferece().GetComponent<Script_Player_Movement>().stopFocus();
                 RemoveFromTeam();
             }
+            StartCoroutine("DamageBuffer");
         }
     }
+    IEnumerator DamageBuffer() {
+        yield return new WaitForSeconds(0.2f);
+        CanRecieveDamage = true;
+        yield return 0;
+    }
     
+    private void ResetKinematics(){
+        rd.isKinematic = true;
+        StartCoroutine("KinematicSet");
+    }
+    private void SetKinematicState(bool value){
+        rd.isKinematic = value;
+    }
+    IEnumerator KinematicSet() {
+        yield return new WaitForSeconds(0.2f);
+        SetKinematicState(false);
+        yield return 0;
+    }
+
     private void RemoveFromTeam(){
         //Remove room enemy count
         aiBase.GetSpawnActor().GetComponent<Script_Enemy_Spawning>().RemoveFromList(gameObject);
@@ -217,6 +244,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
     public void blockingStart() {
         isBlocking = true;
         blockDecision = false;
+        ResetKinematics();
     }
     public void blockingEnd() {
         isBlocking = false;
@@ -236,12 +264,14 @@ public class Script_Enemy_Thug : MonoBehaviour{
         anim.SetBool("isBlocking", false);
         anim.SetBool("isAttacking", false);
         anim.SetBool("isIdle", true);
+        ResetKinematics();
     }
     public void turnOff_takeDamageHeavy() {
         anim.SetBool("isAttacking", false);
         anim.SetBool("tookDamage_heavy", false);
         anim.SetBool("isBlocking", false);
         anim.SetBool("isIdle", true);
+        ResetKinematics();
     }
     #endregion
     #region Death Animation Controls
@@ -249,12 +279,14 @@ public class Script_Enemy_Thug : MonoBehaviour{
         transform.position = new Vector3(transform.position.x, -1.5f, transform.position.z);
         anim.SetBool("isDying_heavy", false);
         anim.SetBool("isDying_light", false);
+        rd.isKinematic = true;
     }
     #endregion
     #region Dodge Back Animation Controls
     public void turnOffDodgeBack() {
         anim.SetBool("isDodging", false);
         anim.SetBool("isIdle", true);
+        ResetKinematics();
     }
     #endregion
     #region Dodge Back
@@ -277,6 +309,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
     #region Turn on Attack
     public void TurnOnAttack() {
         anim.SetBool("isAttacking", true);
+        ResetKinematics();
     }
     #endregion
 }
