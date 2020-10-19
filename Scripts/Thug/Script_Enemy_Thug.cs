@@ -139,7 +139,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
                 }
             }
             if (isDodging) {
-                transform.Translate((transform.forward * -1) * 3f * Time.deltaTime);
+              //  transform.Translate((transform.forward * -1) * 3f * Time.deltaTime);
             }
 
             if (aiBase.getPlayerFocus() == null &&
@@ -295,6 +295,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
         blockDecision = false;
         anim.SetBool("isPunching", false);
         anim.SetBool("isWalking", false);
+        ResetKinematics();
     }
     public void DodgeBackEnd() {
         isDodging = false;

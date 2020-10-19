@@ -174,23 +174,22 @@ public class Script_Transparency_Manager : MonoBehaviour {
             wallAssets.Add(transform.GetChild(i).gameObject);
         }
     }
-     public void MakeTransparent(bool checkStatus){
+     public void MakeTransparent(bool checkStatus) {
         //currentTask is for exception handling
         GameObject currentTask = null;
         try {
             for (int i = 0; i < wallAssets.Count; i++) {
                 currentTask = wallAssets[i];
                 //cull wall assets for transparent walls
-                if (wallAssets[i].name.Contains("KCWall") || !checkStatus){
+                if (wallAssets[i].name.Contains("KCWall") || !checkStatus) {
                 //get a list of materials in gameobject and set each blendmode to transparent
-                    foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                        ChangeRenderMode (m, BlendMode.Transparent);
-                        Color32 col = m.GetColor("_Color");
-                        col.a = (byte)customOpacity;
-                        m.SetColor("_Color", col);
+                    if (!checkStatus) {
+                        wallAssets[i].GetComponent<MeshRenderer>().enabled = false;
+                    } else {
+                        wallAssets[i].GetComponent<MeshRenderer>().enabled = false;
                     }
                 } else {
-                    if (checkStatus){
+                    if (checkStatus) {
                         Destroy(wallAssets[i]);
                     }
                 }
@@ -225,8 +224,12 @@ public class Script_Transparency_Manager : MonoBehaviour {
                 currentTask = wallAssets[i];
                 //get a list of materials in gameobject and set each blendmode to opaque
                 if (wallAssets[i] != null){
-                    foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
-                        ChangeRenderMode (m, BlendMode.Opaque); 
+                    if (wallAssets[i].name.Contains("KCFloor")){
+                        foreach (Material m in wallAssets[i].GetComponent<Renderer>().materials){
+                            ChangeRenderMode (m, BlendMode.Opaque); 
+                        }
+                    } else {
+                        wallAssets[i].GetComponent<MeshRenderer>().enabled = true;
                     }
                 }
             }

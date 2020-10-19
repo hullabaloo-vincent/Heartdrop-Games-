@@ -290,60 +290,60 @@ public class Script_Player_Movement : MonoBehaviour {
             Vector3 angles = transform.eulerAngles;
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 50f, 0f); //West
-                anim.SetBool("walkForward", false);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", true);
-                anim.SetBool("walkRight", false);
+                anim.SetBool("walkForward", true);
+            //    anim.SetBool("walkBack", false);
+            //    anim.SetBool("walkLeft", false);
+            //    anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 240f, 0f); //East
-                anim.SetBool("walkForward", false);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", true);
+                anim.SetBool("walkForward", true);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("VerticalKey") == 1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, -45f, 0f); //North
                 anim.SetBool("walkForward", true);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("VerticalKey") == -1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, 130f, 0f); //South
                 anim.SetBool("walkForward", true);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
 
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -28f, 0f); //NorthEast
                 anim.SetBool("walkForward", true);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == -1){
                 angles = new Vector3(0f, 85f, 0f); //SouthEast
-                anim.SetBool("walkForward", false);
-                anim.SetBool("walkBack", true);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+                anim.SetBool("walkForward", true);
+              //  anim.SetBool("walkBack", false);
+              //  anim.SetBool("walkLeft", false);
+              //  anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -94f, 0f); //NorthWest
                 anim.SetBool("walkForward", true);
-                anim.SetBool("walkBack", false);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == -1){
                 angles = new Vector3(0f, 156f, 0f); //SouthWest
-                anim.SetBool("walkForward", false);
-                anim.SetBool("walkBack", true);
-                anim.SetBool("walkLeft", false);
-                anim.SetBool("walkRight", false);
+                anim.SetBool("walkForward", true);
+             //   anim.SetBool("walkBack", false);
+             //   anim.SetBool("walkLeft", false);
+             //   anim.SetBool("walkRight", false);
             }
             float turningRate = 250f;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
