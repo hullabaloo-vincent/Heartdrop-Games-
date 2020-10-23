@@ -40,6 +40,9 @@ public class Script_Player_Movement : MonoBehaviour {
     GameObject rightHand;
     GameObject leftHand;
     public GameObject punchObj;
+    private bool HasHit = false;
+    private bool CanChain = false;
+    private int ChainLevel = 0;
 
     bool activatedSpell = false;
     bool canCast = true;
@@ -291,59 +294,35 @@ public class Script_Player_Movement : MonoBehaviour {
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 50f, 0f); //West
                 anim.SetBool("walkForward", true);
-            //    anim.SetBool("walkBack", false);
-            //    anim.SetBool("walkLeft", false);
-            //    anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 0){
                 angles = new Vector3(0f, 240f, 0f); //East
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("VerticalKey") == 1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, -45f, 0f); //North
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("VerticalKey") == -1 && Input.GetAxis("HorizontalKey") == 0){
                 angles = new Vector3(0f, 130f, 0f); //South
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
 
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -28f, 0f); //NorthEast
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == -1){
                 angles = new Vector3(0f, 85f, 0f); //SouthEast
                 anim.SetBool("walkForward", true);
-              //  anim.SetBool("walkBack", false);
-              //  anim.SetBool("walkLeft", false);
-              //  anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 1){
                 angles = new Vector3(0f, -94f, 0f); //NorthWest
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
             if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == -1){
                 angles = new Vector3(0f, 156f, 0f); //SouthWest
                 anim.SetBool("walkForward", true);
-             //   anim.SetBool("walkBack", false);
-             //   anim.SetBool("walkLeft", false);
-             //   anim.SetBool("walkRight", false);
             }
             float turningRate = 250f;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
@@ -358,31 +337,57 @@ public class Script_Player_Movement : MonoBehaviour {
     public GameObject focusedEnemy(){
         return enemySelection;
     }
-    public void setFocusEnemy(GameObject enemy){
-        enemySelection = enemy;
+    public void setFocusEnemy(GameObject _enemy){
+        enemySelection = _enemy;
         selectedEnemy = true;
     }
 
     //Called via animation event from Anim_Player_Punch
     public void punchRight() {
+        //Instantiate punch volume at player's right hand
         GameObject playerHit = Instantiate(punchObj, rightHand.transform.position, rightHand.transform.rotation);
+        //Set spawn reference to player
+        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
     }
     public void punchLeft() {
+        //Instantiate punch volume at player's left hand
         GameObject playerHit = Instantiate(punchObj, leftHand.transform.position, leftHand.transform.rotation);
+        //Set spawn reference to player
+        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
     }
 
-    private void AttackForce(float strength){
+    public void HitLanded(){
+        //If a chain is already started, stop the ongoing countdown to reset it
+        if (CanChain) {
+            StopCoroutine("HitChain");
+        }
+        CanChain = true; //Is in chain
+        ChainLevel++; //Current chain
+        StartCoroutine("HitChain"); //Restart chain
+        Debug.Log("Chain Level: " + ChainLevel);
+    }
+
+    //Resets chain
+    IEnumerator HitChain() {
+        yield return new WaitForSeconds(1f);
+        CanChain = false; //Turn of chain
+        ChainLevel = 0; //Reset chain value
+        Debug.Log("Stopping Chain");
+        yield return 0;
+    }
+
+    private void AttackForce(float _strength){
         //Move the player a tiny bit forwared with an attack
-        controller.Move((transform.forward * 1) * strength * Time.deltaTime);
+        controller.Move((transform.forward * 1) * _strength * Time.deltaTime);
     }
 
     //recieve damage from enemies
-    public void recieveDamage(float damage, GameObject attack) {
+    public void recieveDamage(float _damage, GameObject attack) {
         if (!anim.GetBool("blockSafe") && canTakeDamge && !anim.GetBool("inDamage")) {
             resetAnimation();
-            health -= damage;
+            health -= _damage;
             resetAnimation();
-            if (damage >= 0.4) {
+            if (_damage >= 0.4) {
                 anim.SetBool("tookDamage_heavy", true);
                 controller.Move((transform.forward * -1) * 10f * Time.deltaTime);
             } else {
