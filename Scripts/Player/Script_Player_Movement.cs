@@ -60,6 +60,34 @@ public class Script_Player_Movement : MonoBehaviour {
         rd = GetComponent<Rigidbody>();
         controller = GetComponent<CharacterController>();
 
+        InitSpells();
+
+        //iso controls
+        forward = Camera.main.transform.forward;
+        forward.y = 0;
+        forward = Vector3.Normalize(forward);
+        right = Quaternion.Euler(new Vector3(0, 90, 0)) * forward;
+        m_MainCamera = Camera.main;
+        
+        //define movement speeds
+        movementSpeeds = new Dictionary<string, float>(); //set movement speeds
+        movementSpeeds.Add("walking", 2f);
+        movementSpeeds.Add("running", 6f);
+        movementSpeeds.Add("dashing", 6f);
+        movementSpeeds.Add("attackPunch", 10f);
+
+        debugObj = GameObject.FindGameObjectWithTag("Debug");
+
+        //map coordinates of player limbs
+        rightHand = gameObject.transform.Find(
+            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
+            ).gameObject;
+        leftHand = gameObject.transform.Find(
+            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand"
+            ).gameObject;
+    }
+
+    private void InitSpells(){
         spellSlot1 = spellController.slots[0].GetComponent<Animator>();
         spellSlot2 = spellController.slots[1].GetComponent<Animator>();
         spellSlot3 = spellController.slots[2].GetComponent<Animator>();
@@ -89,30 +117,6 @@ public class Script_Player_Movement : MonoBehaviour {
                 }
             }
         }
-
-        //iso controls
-        forward = Camera.main.transform.forward;
-        forward.y = 0;
-        forward = Vector3.Normalize(forward);
-        right = Quaternion.Euler(new Vector3(0, 90, 0)) * forward;
-        m_MainCamera = Camera.main;
-        
-        //define movement speeds
-        movementSpeeds = new Dictionary<string, float>(); //set movement speeds
-        movementSpeeds.Add("walking", 2f);
-        movementSpeeds.Add("running", 6f);
-        movementSpeeds.Add("dashing", 6f);
-        movementSpeeds.Add("attackPunch", 10f);
-
-        debugObj = GameObject.FindGameObjectWithTag("Debug");
-
-        //map coordinates of player limbs
-        rightHand = gameObject.transform.Find(
-            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
-            ).gameObject;
-        leftHand = gameObject.transform.Find(
-            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand"
-            ).gameObject;
     }
 
     void Update() {
