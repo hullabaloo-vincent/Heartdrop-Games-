@@ -47,7 +47,15 @@ public class Script_Player_Movement : MonoBehaviour {
     bool activatedSpell = false;
     bool canCast = true;
 
+    List<List<string>> AttackCombo;
+    private int MinChain = 0;
+    private int MaxChain = 3;
+
     void Start() {
+        AttackCombo = new List<List<string>>();
+        AttackCombo.Add(new List<string>{"punch1","punch2","punch3"}); //Combo 1
+        AttackCombo.Add(new List<string>{"punch4", "punch5"}); //Combo 2
+        AttackCombo.Add(new List<string>{"punch6","punch7","punch8"}); //Combo 3
         anim = GetComponent<Animator>();
         rd = GetComponent<Rigidbody>();
         controller = GetComponent<CharacterController>();
@@ -171,31 +179,11 @@ public class Script_Player_Movement : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) {
             //666 = no spell selected, therefore the player will use melee
             if (spellController.currentlySelected() == 666 && !anim.GetBool("isPunching")){
-                int punchChooser = Random.Range(1, 5);
                 resetAnimation();
                 anim.SetBool("isPunching", true);
-                switch (punchChooser) {
-                    case 1:
-                        anim.SetBool("punch1", true);
-                        AttackForce(movementSpeeds["attackPunch"]);
-                        break;
-                    case 2:
-                        anim.SetBool("punch2", true);
-                        AttackForce(movementSpeeds["attackPunch"]);
-                        break;
-                    case 3:
-                        anim.SetBool("punch3", true);
-                        AttackForce(movementSpeeds["attackPunch"]);
-                        break;
-                    case 4:
-                        anim.SetBool("punch4", true);
-                        AttackForce(movementSpeeds["attackPunch"]);
-                        break;
-                    case 5:
-                        anim.SetBool("punch5", true);
-                        AttackForce(movementSpeeds["attackPunch"]);
-                        break;
-                }
+                int Chain = Mathf.Clamp(ChainLevel, MinChain, MaxChain);
+                anim.SetBool(AttackCombo[Chain][Random.Range(0, AttackCombo[Chain].Count)], true);
+                AttackForce(movementSpeeds["attackPunch"]);
             } else {
                 if (!activatedSpell && !anim.GetBool("isDrinking") && canCast){
                         resetAnimation();
@@ -448,13 +436,7 @@ private void SetIdle(){
     }
     public void endPunch() {
         isPunching = false;
-        //resetAnimation();
-        anim.SetBool("punch1", false);
-        anim.SetBool("punch2", false);
-        anim.SetBool("punch3", false);
-        anim.SetBool("punch4", false);
-        anim.SetBool("punch5", false);
-        anim.SetBool("isPunching", false);
+        resetAnimation();
         anim.SetBool("attackCooldown", true);
     }
     #endregion
