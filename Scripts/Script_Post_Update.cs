@@ -18,10 +18,10 @@ public class Script_Post_Update : MonoBehaviour {
     void Start(){
         pp = gameObject.GetComponent<PostProcessVolume>();
         pp.profile.TryGetSettings(out ca);
-   //     pp.profile.TryGetSettings(out mb);
+        pp.profile.TryGetSettings(out mb);
 
         newChrom = defaultChrom;
-   //     newMotionBlur = defaultMotionBlur;
+        newMotionBlur = defaultMotionBlur;
     }
 
     void Update(){
@@ -29,10 +29,10 @@ public class Script_Post_Update : MonoBehaviour {
             newChrom -= 0.01f;
         }
         if (newMotionBlur > defaultMotionBlur) {
-            newMotionBlur -= 0.01f;
+            newMotionBlur -= 1.5f;
         }
         ca.intensity.value = newChrom;
-   //     mb.shutterAngle.value = newMotionBlur;
+        mb.shutterAngle.value = newMotionBlur;
     }
 
     public void UpdateChromaticAberration(float newValue) {
@@ -40,6 +40,6 @@ public class Script_Post_Update : MonoBehaviour {
     }
 
     public void UpdateMotionBlur(float newValue){
-      //  newMotionBlur = newValue;
+        newMotionBlur = newValue;
     }
 }

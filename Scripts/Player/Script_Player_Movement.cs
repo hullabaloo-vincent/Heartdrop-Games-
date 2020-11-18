@@ -54,7 +54,7 @@ public class Script_Player_Movement : MonoBehaviour {
     void Start() {
         AttackCombo = new List<List<string>>();
         AttackCombo.Add(new List<string>{"punch1","punch2","punch3"}); //Combo 1
-        AttackCombo.Add(new List<string>{"punch4", "punch5"}); //Combo 2
+        AttackCombo.Add(new List<string>{"punch4"}); //Combo 2
         AttackCombo.Add(new List<string>{"punch6","punch7","punch8"}); //Combo 3
         anim = GetComponent<Animator>();
         rd = GetComponent<Rigidbody>();
@@ -73,7 +73,7 @@ public class Script_Player_Movement : MonoBehaviour {
         movementSpeeds = new Dictionary<string, float>(); //set movement speeds
         movementSpeeds.Add("walking", 2f);
         movementSpeeds.Add("running", 6f);
-        movementSpeeds.Add("dashing", 6f);
+        movementSpeeds.Add("dashing", 4f);
         movementSpeeds.Add("attackPunch", 10f);
 
         debugObj = GameObject.FindGameObjectWithTag("Debug");
@@ -209,6 +209,8 @@ public class Script_Player_Movement : MonoBehaviour {
         //if player is too far away from selected object, turn off marker
         if (enemySelection != null){
             if (Vector3.Distance(enemySelection.transform.position, gameObject.transform.position) > 5f){
+                //Tell the enemy that the player is no longer focusing on it
+                enemySelection.GetComponent<Script_Enemy_Base>().StopPlayerFocus();
                 selectedEnemy = false;
                 enemySelection = null;
             }
@@ -322,6 +324,8 @@ public class Script_Player_Movement : MonoBehaviour {
     }
     
     public void stopFocus(){
+        //Tell the enemy that the player is no longer focusing on it
+        enemySelection.GetComponent<Script_Enemy_Base>().StopPlayerFocus();
         selectedEnemy = false;
         enemySelection = null;
     }
@@ -329,6 +333,7 @@ public class Script_Player_Movement : MonoBehaviour {
     public GameObject focusedEnemy(){
         return enemySelection;
     }
+    /* This function is only called by enemies. _enemy value is passed through by an enemy class*/
     public void setFocusEnemy(GameObject _enemy){
         enemySelection = _enemy;
         selectedEnemy = true;
@@ -381,7 +386,10 @@ public class Script_Player_Movement : MonoBehaviour {
             resetAnimation();
             if (_damage >= 0.4) {
                 anim.SetBool("tookDamage_heavy", true);
-                controller.Move((transform.forward * -1) * 10f * Time.deltaTime);
+                //Set forward y value to player's standing y position
+                Vector3 newForward = new Vector3(transform.forward.x, transform.position.y, transform.forward.z);
+                //Move player backwards
+                controller.Move((newForward * -1) * 10f * Time.deltaTime);
             } else {
                 anim.SetBool("tookDamage_light", true);
             }

@@ -31,9 +31,9 @@ public class Script_Enemy_Spawning : MonoBehaviour{
                     Spawned.Add(go);
                 }
                 //Send team list to each enemy
-                for (int i = 0; i < Spawned.Count; i++) {
-                    Spawned[i].GetComponent<Script_Enemy_Base>().SetSpawnActor(gameObject);  
-                    Spawned[i].GetComponent<Script_Enemy_Base>().SetTeam(Spawned);
+                foreach(GameObject go in Spawned) {
+                    go.GetComponent<Script_Enemy_Base>().SetSpawnActor(gameObject);  
+                    go.GetComponent<Script_Enemy_Base>().SetTeam(Spawned);
                 }
             }
         }

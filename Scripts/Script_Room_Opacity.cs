@@ -111,23 +111,27 @@ public class Script_Room_Opacity : MonoBehaviour {
      public void MakeTransparent(){
          if (isOpaque) {
          isOpaque = false;
+        // if (roomAssetsFiltered.Count > 0){
+
+      //   }
          //currentTask is for exception handling
          GameObject currentTask = null;
          for (int i = 0; i < roomAssets.Count; i++) {
             try {
                 currentTask = roomAssets[i];
                 //get a list of materials in gameobject and set each blendmode to transparent
-                roomAssets[i].GetComponent<MeshRenderer>().enabled = true;
+                roomAssets[i].GetComponent<MeshRenderer>().enabled = false;
+                roomAssetsFiltered.Add(roomAssets[i]);
+                
             } catch (MissingComponentException MCE) {
                 //get gameobject that caused the exception
                 GameObject problemObject = currentTask;
                 //get children of problem gameobject
                 List<GameObject> exceptionObject = new List<GameObject>();
-                if (!problemObject.name.Contains("Wall")){
+                if (!problemObject.name.Contains("Wall") && problemObject.transform.childCount > 0){
                     for (int i2 = 0; i2 < problemObject.transform.childCount; i2++) {
                         exceptionObject.Add(problemObject.transform.GetChild(i2).gameObject);
                     }
-                    //set its children to transparent
                     for (int i3 = 0; i3 < exceptionObject.Count; i3++){
                         //get a list of materials in gameobject and set each blendmode to transparent
                         try{
@@ -173,7 +177,6 @@ public class Script_Room_Opacity : MonoBehaviour {
                                 roomAssetsFiltered[i].GetComponent<MeshRenderer>().enabled = true;
                             } catch (MissingComponentException MCE) {
                                 GameObject problemObject = currentTask;
-                                Debug.Log("Problem Object: " + problemObject);
                                 List<GameObject> exceptionObject = new List<GameObject>();
                                 if (problemObject.name.Contains("Obstacles") || 
                                     problemObject.name.Contains("Decoration")){
@@ -181,7 +184,7 @@ public class Script_Room_Opacity : MonoBehaviour {
                                         exceptionObject.Add(problemObject.transform.GetChild(i2).gameObject);
                                     }
                                     //set its children to transparent
-                                    for (int i3 = 0; i3 < exceptionObject.Count; i3++){
+                                    for (int i3 = 0; i3 < exceptionObject.Count; i3++){    
                                         exceptionObject[i3].GetComponent<MeshRenderer>().enabled = true;
                                     }
                                 continue;

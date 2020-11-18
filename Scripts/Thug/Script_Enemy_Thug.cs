@@ -80,10 +80,24 @@ public class Script_Enemy_Thug : MonoBehaviour{
                 }
 
                 /*
+                * The enemy is walking yet they are moving nowhere; the enemy might be stuck behind
+                * other entities. This will change their course to flanking instead
+                */
+                if (aiBase.getAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer){
+                    aiBase.SetFlankPosition();
+                    aiBase.SetFlank(true);
+                }
+
+                //Remove flank behavior if all teammates are dead
+                if (aiBase.getTeam().Count == 0){
+                    aiBase.SetFlank(false);
+                }
+
+                /*
                  * If player is within punching range and is in front of the thug, start attacking
                  */
-                if (Vector3.Distance(aiBase.getPlayerLocation(), gameObject.transform.position) <= 1.6f &&
-                    aiBase.canSeePlayer() && !anim.GetBool("isAttacking")) {
+                if (Vector3.Distance(aiBase.getPlayerLocation(), gameObject.transform.position) <= 1.5f &&
+                    aiBase.canSeePlayer() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking()) {
                     int attackChooser = Random.Range(1, 10);
                     if (attackChooser <= 4) {
                         anim.SetBool("isPunching", true);
@@ -101,7 +115,7 @@ public class Script_Enemy_Thug : MonoBehaviour{
                 /*
                  * If player goes outside of sight range, rotate towards player
                  */
-                if (!aiBase.canSeePlayer() && !anim.GetBool("isAttacking")) {
+                if (!aiBase.canSeePlayer() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking()) {
                     Vector3 targetDirection = aiBase.getPlayerLocation() - transform.position;
                     float rotationSpeed = 3;
                     float singleStep = rotationSpeed * Time.deltaTime;
@@ -109,6 +123,16 @@ public class Script_Enemy_Thug : MonoBehaviour{
                     Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
 
                     transform.rotation = Quaternion.LookRotation(newDirection);
+                }
+                //If the enemy is attacking but cannot see the player anymore try to move to a new spot
+                if (!aiBase.canSeePlayer() && !aiBase.IsFlanking() && anim.GetBool("isAttacking")){
+                    aiBase.SetFlankPosition();
+                    aiBase.SetFlank(true);
+                }
+
+                //Turn off flanking if the player is really close (EX: Player walks past enemy moving to flanking position)
+                if (Vector3.Distance(aiBase.getPlayerLocation(), gameObject.transform.position) <= 1.5f && aiBase.IsFlanking()) {
+                    aiBase.SetFlank(false);
                 }
 
                 if (GameObject.Find("PlayerPunch(Clone)") &&
@@ -145,6 +169,8 @@ public class Script_Enemy_Thug : MonoBehaviour{
             if (aiBase.getPlayerFocus() == null &&
              Vector3.Distance(aiBase.getPlayerLocation(), gameObject.transform.position) <= 5f){
                  aiBase.playerReferece().GetComponent<Script_Player_Movement>().setFocusEnemy(gameObject);
+                 //Tells the team that it is being focused by the player
+                 aiBase.PlayerFocused();
             }
         }
     }
@@ -280,6 +306,8 @@ public class Script_Enemy_Thug : MonoBehaviour{
         anim.SetBool("isDying_heavy", false);
         anim.SetBool("isDying_light", false);
         rd.isKinematic = true;
+        //Destroys the collider on the enemy
+        Destroy (GetComponent<CapsuleCollider>());
     }
     #endregion
     #region Dodge Back Animation Controls

@@ -45,7 +45,7 @@ public class Script_Door : MonoBehaviour {
         }
     }
 
-    private void OnTriggerExit(Collider other) {
+    /*private void OnTriggerExit(Collider other) {
         if (other.gameObject.tag == "Player"){
             if (!reverseDirection && reset){
                 reverseDirection = true;
@@ -88,7 +88,7 @@ public class Script_Door : MonoBehaviour {
                 }
             }
         }
-    }
+    }*/
 
     public Script_Asset_Loader GetAssetLoaderExit(){
         return AssetLoaderExit;
