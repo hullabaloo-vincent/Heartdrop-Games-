@@ -4,20 +4,21 @@ using UnityEngine;
 
 public class Script_Slight_Swing : MonoBehaviour
 {
-          float delta = 0.01f;  // Amount to move left and right from the start point
-      float speed;
-      float direction;
-     private Quaternion startPos;
-     void Start()
-     {
-         startPos = transform.rotation;
-         speed = Random.Range(0.1f, 0.8f);
-         direction = Random.Range(1f, 5f);
-     }
-     void Update()
-     {
-         Quaternion a = startPos;
-         a.x += direction * (delta * Mathf.Sin(Time.time * speed));
-         transform.rotation = a;
-     }
+    void Start()
+    {
+        _StartPos = transform.rotation;
+        _Speed = Random.Range(0.1f, 0.8f);
+        _Direction = Random.Range(1f, 5f);
+    }
+    void Update()
+    {
+        Quaternion a = _StartPos;
+        a.x += _Direction * (_Delta * Mathf.Sin(Time.time * _Speed));
+        transform.rotation = a;
+    }
+
+    private float _Delta = 0.01f;  // Amount to move left and right from the start point
+    private float _Speed;
+    private float _Direction;
+    private Quaternion _StartPos;
 }

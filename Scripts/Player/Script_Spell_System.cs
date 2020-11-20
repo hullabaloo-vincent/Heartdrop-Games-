@@ -3,34 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Script_Spell_System : MonoBehaviour {
-    public GameObject[] slots;
-    public bool[] activeSlots;
-    int selectedSpell;
-    string selectedSpellType;
-
-    float inActiveValue;
-
-    Dictionary<int, string> spells;
-    
-    void Start() {
-        activeSlots = new bool[]{false, false, false};
+public class Script_Spell_System : MonoBehaviour
+{
+    void Start()
+    {
+        activeSlots = new bool[] { false, false, false };
         inActiveValue = 0.2f;
         selectedSpell = 666;
         spells = new Dictionary<int, string>();
         spells.Add(1, "null");
         spells.Add(2, "null");
         spells.Add(3, "null");
-        setSpells("Fireball", 1);
+        SetSpell("Fireball", 1);
     }
 
-    public void setSpells(string spellType, int slot){
+    public void SetSpell(string spellType, int slot)
+    {
         int slotSelection = slot - 1;
         spells.Remove(slot);
         spells.Add(slot, spellType);
         Animator spellAnim = slots[slotSelection].GetComponent<Animator>();
         //reset animation for the slot
-        resetAnimation(spellAnim);
+        ResetAnimation(spellAnim);
         //set the new animation
         spellAnim.SetBool(spellType, true);
         //activate the slot
@@ -41,7 +35,8 @@ public class Script_Spell_System : MonoBehaviour {
         slots[slotSelection].GetComponent<Image>().color = newColor;
     }
 
-    public void selectSpell(int slot){
+    public void SelectSpell(int slot)
+    {
         int slotSelection = slot - 1;
         selectedSpell = slotSelection;
 
@@ -51,21 +46,30 @@ public class Script_Spell_System : MonoBehaviour {
         offColor.a = 0f;
 
         //make all slots turn off or make semi-transparent
-        if (activeSlots[0]){
+        if (activeSlots[0])
+        {
             slots[0].GetComponent<Image>().color = fadeColor;
-        } else {
+        }
+        else
+        {
             slots[0].GetComponent<Image>().color = offColor;
         }
 
-        if (activeSlots[1]){
+        if (activeSlots[1])
+        {
             slots[1].GetComponent<Image>().color = fadeColor;
-        } else {
+        }
+        else
+        {
             slots[1].GetComponent<Image>().color = offColor;
         }
 
-        if (activeSlots[2]){
+        if (activeSlots[2])
+        {
             slots[2].GetComponent<Image>().color = fadeColor;
-        } else {
+        }
+        else
+        {
             slots[2].GetComponent<Image>().color = offColor;
         }
 
@@ -74,7 +78,8 @@ public class Script_Spell_System : MonoBehaviour {
         slots[slotSelection].GetComponent<Image>().color = fadeColor;
     }
 
-    public void deselectSlot(int slot){
+    public void DeselectSlot(int slot)
+    {
         int slotSelection = slot - 1;
         //666 = no spells are selected
         selectedSpell = 666;
@@ -83,18 +88,31 @@ public class Script_Spell_System : MonoBehaviour {
         slots[slotSelection].GetComponent<Image>().color = fadeColor;
     }
 
-    private void resetAnimation(Animator anim) {
-        foreach (AnimatorControllerParameter parameter in anim.parameters) {
+    private void ResetAnimation(Animator anim)
+    {
+        foreach (AnimatorControllerParameter parameter in anim.parameters)
+        {
             anim.SetBool(parameter.name, false);
         }
     }
 
-    public int currentlySelected(){
+    public int CurrentlySelected()
+    {
         return selectedSpell;
     }
 
-    public string activeSpell(){
+    public string ActiveSpell()
+    {
         int current = selectedSpell + 1;
         return spells[current];
     }
+
+    public GameObject[] slots;
+    public bool[] activeSlots;
+    int selectedSpell;
+    string selectedSpellType;
+
+    float inActiveValue;
+
+    Dictionary<int, string> spells;
 }
