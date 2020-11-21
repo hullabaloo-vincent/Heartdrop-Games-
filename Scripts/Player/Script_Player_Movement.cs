@@ -12,7 +12,6 @@ public class Script_Player_Movement : MonoBehaviour
         _AttackCombo.Add(new List<string> { "punch6", "punch7", "punch8" }); //Combo 3
         _Anim = GetComponent<Animator>();
         _Rd = GetComponent<Rigidbody>();
-        _Controller = GetComponent<CharacterController>();
 
         InitSpells();
 
@@ -25,10 +24,10 @@ public class Script_Player_Movement : MonoBehaviour
 
         //define movement speeds
         _MovementSpeeds = new Dictionary<string, float>(); //set movement speeds
-        _MovementSpeeds.Add("walking", 2f);
-        _MovementSpeeds.Add("running", 6f);
-        _MovementSpeeds.Add("dashing", 4f);
-        _MovementSpeeds.Add("attackPunch", 10f);
+        _MovementSpeeds.Add("walking", 1f);
+        _MovementSpeeds.Add("running", 4f);
+        _MovementSpeeds.Add("dashing", 6f);
+        _MovementSpeeds.Add("attackPunch", 20f);
 
         _DebugObj = GameObject.FindGameObjectWithTag("Debug");
 
@@ -85,31 +84,18 @@ public class Script_Player_Movement : MonoBehaviour
 
     void Update()
     {
+        Move();
         #region Movement
         //if player is not currently dashing, and the player is pressing down on the movement keys
         if (!_Anim.GetBool("isDashing") && !_Anim.GetBool("isDrinking") && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.LeftShift)))
         {
-            Move();
         }
         else
         {
             //no movement keys are pressed. Make sure movment bools are set to false
             _Anim.SetBool("isWalking", false);
             _Anim.SetBool("isRunning", false);
-        }
-
-        if (_Anim.GetBool("isDashing"))
-        {
-            if (_DashKeyName == "horizontal")
-            {
-                _Controller.Move(Right * _MovementSpeeds["dashing"] * Time.deltaTime * _DashKeyValue);
-                _Controller.Move(Right * _MovementSpeeds["dashing"] * Time.deltaTime * _DashKeyValue);
-            }
-            else
-            {
-                _Controller.Move(Forward * _MovementSpeeds["dashing"] * Time.deltaTime * _DashKeyValue);
-                _Controller.Move(Forward * _MovementSpeeds["dashing"] * Time.deltaTime * _DashKeyValue);
-            }
+            _Rd.velocity = new Vector3(0, 0, 0);
         }
 
         //dash if player is pressing space, already moving, and not currently dashing
@@ -150,10 +136,6 @@ public class Script_Player_Movement : MonoBehaviour
                 _DashKeyName = "vertical";
                 _DashKeyValue = -1;
             }
-        }
-        if (!_Anim.GetBool("isDrinking") && !_Anim.GetBool("isPunching"))
-        {
-            RotateActor(); //rotate actor towards mouse
         }
         #endregion
         #region Attacking and blocking
@@ -222,10 +204,22 @@ public class Script_Player_Movement : MonoBehaviour
         #endregion
     }
 
+    private void FixedUpdate()
+    {
+        _Rd.velocity = _InputVector;
+
+        if (!_Anim.GetBool("isDrinking") && !_Anim.GetBool("isPunching"))
+        {
+            RotateActor(); //rotate actor towards mouse
+        }
+    }
+
     void Move()
     {
         float tempMoveSpeed = 0; //temporary move speed that will assume new movement values
-        if (!_Anim.GetBool("isPunching"))
+
+        if (!_Anim.GetBool("isPunching") && !_Anim.GetBool("isDashing") && !_Anim.GetBool("isDrinking") &&
+         (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.LeftShift)))
         {
             resetAnimation();
             if (Input.GetKey(KeyCode.LeftShift) && (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)))
@@ -233,8 +227,6 @@ public class Script_Player_Movement : MonoBehaviour
                 tempMoveSpeed = _MovementSpeeds["running"];
 
                 _Anim.SetBool("isRunning", true);
-                _Anim.SetBool("isWalking", false);
-                _Anim.SetBool("attackCooldown", false);
             }
             else
             {
@@ -245,17 +237,19 @@ public class Script_Player_Movement : MonoBehaviour
                     {
                         _Anim.SetBool("isSelectedEnemy", true);
                     }
-                    _Anim.SetBool("isRunning", false);
                     _Anim.SetBool("isWalking", true);
-                    _Anim.SetBool("attackCooldown", false);
                 }
             }
         }
 
+        if (_Anim.GetBool("isDashing")){
+            tempMoveSpeed = _MovementSpeeds["dashing"];
+        }
+
         //move character
-        Vector3 rightMovement = Right * tempMoveSpeed * Time.deltaTime * Input.GetAxis("HorizontalKey");
-        Vector3 upMovement = Forward * tempMoveSpeed * Time.deltaTime * Input.GetAxis("VerticalKey");
-        Vector3 playerMovement = rightMovement + upMovement;
+        Vector3 rightMovement = Right * Input.GetAxisRaw("Horizontal") * tempMoveSpeed;
+        Vector3 upMovement = Forward * Input.GetAxisRaw("Vertical") * tempMoveSpeed;
+        Vector3 playerMovement = (rightMovement + upMovement);
 
         //moveCharacter if player only if they are using the walking or running animation
         if (_Anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") ||
@@ -267,7 +261,7 @@ public class Script_Player_Movement : MonoBehaviour
         && (!_Anim.GetBool("isPunching") &&
         !_Anim.GetBool("tookDamage")))
         {
-            _Controller.Move(playerMovement);
+            _InputVector = playerMovement;
         }
     }
     void RotateActor()
@@ -282,55 +276,56 @@ public class Script_Player_Movement : MonoBehaviour
 
             Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
 
-            transform.rotation = Quaternion.LookRotation(newDirection);
+            _Rd.rotation = Quaternion.LookRotation(newDirection);
         }
         else
         {
             //8-way rotation based on WASD keys
             Vector3 angles = transform.eulerAngles;
-            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 0)
+            if (Input.GetAxisRaw("Horizontal") == 1 && Input.GetAxisRaw("Vertical") == 0)
             {
                 angles = new Vector3(0f, 50f, 0f); //West
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 0)
+            if (Input.GetAxisRaw("Horizontal") == -1 && Input.GetAxisRaw("Vertical") == 0)
             {
                 angles = new Vector3(0f, 240f, 0f); //East
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("VerticalKey") == 1 && Input.GetAxis("HorizontalKey") == 0)
+            if (Input.GetAxisRaw("Vertical") == 1 && Input.GetAxisRaw("Horizontal") == 0)
             {
                 angles = new Vector3(0f, -45f, 0f); //North
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("VerticalKey") == -1 && Input.GetAxis("HorizontalKey") == 0)
+            if (Input.GetAxisRaw("Vertical") == -1 && Input.GetAxisRaw("Horizontal") == 0)
             {
                 angles = new Vector3(0f, 130f, 0f); //South
                 _Anim.SetBool("walkForward", true);
             }
 
-            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == 1)
+            if (Input.GetAxisRaw("Horizontal") == 1 && Input.GetAxisRaw("Vertical") == 1)
             {
                 angles = new Vector3(0f, -28f, 0f); //NorthEast
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("HorizontalKey") == 1 && Input.GetAxis("VerticalKey") == -1)
+            if (Input.GetAxisRaw("Horizontal") == 1 && Input.GetAxisRaw("Vertical") == -1)
             {
                 angles = new Vector3(0f, 85f, 0f); //SouthEast
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == 1)
+            if (Input.GetAxisRaw("Horizontal") == -1 && Input.GetAxisRaw("Vertical") == 1)
             {
                 angles = new Vector3(0f, -94f, 0f); //NorthWest
                 _Anim.SetBool("walkForward", true);
             }
-            if (Input.GetAxis("HorizontalKey") == -1 && Input.GetAxis("VerticalKey") == -1)
+            if (Input.GetAxisRaw("Horizontal") == -1 && Input.GetAxisRaw("Vertical") == -1)
             {
                 angles = new Vector3(0f, 156f, 0f); //SouthWest
                 _Anim.SetBool("walkForward", true);
             }
-            float turningRate = 250f;
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
+            _MovementDirection = angles;
+            float turningRate = 150f;
+            _Rd.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
         }
     }
 
@@ -358,6 +353,8 @@ public class Script_Player_Movement : MonoBehaviour
     {
         //Instantiate punch volume at player's right hand
         GameObject playerHit = Instantiate(PunchObj, _RightHand.transform.position, _RightHand.transform.rotation);
+        //Ignore collisions from instantiated gameobject
+        Physics.IgnoreCollision(playerHit.GetComponent<BoxCollider>(), GetComponent<CapsuleCollider>());
         //Set spawn reference to player
         playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
     }
@@ -365,6 +362,8 @@ public class Script_Player_Movement : MonoBehaviour
     {
         //Instantiate punch volume at player's left hand
         GameObject playerHit = Instantiate(PunchObj, _LeftHand.transform.position, _LeftHand.transform.rotation);
+        //Ignore collisions from instantiated gameobject
+        Physics.IgnoreCollision(playerHit.GetComponent<BoxCollider>(), GetComponent<CapsuleCollider>());
         //Set spawn reference to player
         playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
     }
@@ -395,13 +394,13 @@ public class Script_Player_Movement : MonoBehaviour
     private void AttackForce(float _strength)
     {
         //Move the player a tiny bit forwared with an attack
-        _Controller.Move((transform.forward * 1) * _strength * Time.deltaTime);
+        _Rd.MovePosition(_Rd.position + transform.forward * _strength * Time.deltaTime);
     }
 
     //recieve damage from enemies
-    public void recieveDamage(float damage, GameObject attack)
+    public void RecieveDamage(float damage, GameObject attack)
     {
-        if (!_Anim.GetBool("blockSafe") && _CanTakeDamge && _Anim.GetBool("inDamage"))
+        if (!_Anim.GetBool("blockSafe") && _CanTakeDamge && !_Anim.GetBool("inDamage"))
         {
             resetAnimation();
             Health -= damage;
@@ -412,7 +411,7 @@ public class Script_Player_Movement : MonoBehaviour
                 //Set forward y value to player's standing y position
                 Vector3 newForward = new Vector3(transform.forward.x, transform.position.y, transform.forward.z);
                 //Move player backwards
-                _Controller.Move((newForward * -1) * 10f * Time.deltaTime);
+                //_Controller.Move((newForward * -1) * 10f * Time.deltaTime);
             }
             else
             {
@@ -577,7 +576,6 @@ public class Script_Player_Movement : MonoBehaviour
     private Camera _MainCamera;
     private Animator _Anim;
     private Rigidbody _Rd;
-    private CharacterController _Controller;
 
     public Script_Post_Update PostUpdate;
     public Script_Spell_System SpellController;
@@ -596,6 +594,8 @@ public class Script_Player_Movement : MonoBehaviour
     private Dictionary<string, float> _MovementSpeeds; //collection of movment speed data
 
     private Vector3 Forward, Right;
+
+    private Vector3 _InputVector;
     const float RotationDamping = 5.5f;
     private bool _IsDead = false;
     private bool _CanTakeDamge = true;
@@ -621,4 +621,6 @@ public class Script_Player_Movement : MonoBehaviour
     private List<List<string>> _AttackCombo;
     private int _MinChain = 0;
     private int _MaxChain = 3;
+
+    private Vector3 _MovementDirection;
 }
