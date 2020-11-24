@@ -13,7 +13,11 @@ public class Script_Enemy_Base : MonoBehaviour
         _EnemyType = enemyComponents[2].GetType();
 
         _Agent = gameObject.GetComponent<NavMeshAgent>();
-        _Agent.stoppingDistance = 1.6f;
+        _Agent.stoppingDistance = 1.2f;
+        _Path = new NavMeshPath();
+
+        _Rd = gameObject.GetComponent<Rigidbody>();
+        _LastSquareMagnitude = Mathf.Infinity;
 
         //Get player references
         _Player = GameObject.FindGameObjectWithTag("Player");
@@ -24,6 +28,11 @@ public class Script_Enemy_Base : MonoBehaviour
         _MovementSpeeds = new Dictionary<string, float>();
         _MovementSpeeds.Add("walking", 1f);
         _MovementSpeeds.Add("running", 3f);
+    }
+
+    private void FixedUpdate()
+    {
+        _Rd.velocity = _TargetVelocity;
     }
 
     //Get the Enemy Spawn gameobject for the room
@@ -69,7 +78,7 @@ public class Script_Enemy_Base : MonoBehaviour
 
     public void SetFlankPosition()
     {
-        _FlankPosition = GetRandomPointBehindPlayer();
+        _CurrentPath = GetRandomPointBehindPlayer();
     }
 
     /*
@@ -110,7 +119,7 @@ public class Script_Enemy_Base : MonoBehaviour
         _Team = temp;
     }
 
-    public List<GameObject> getTeam()
+    public List<GameObject> GetTeam()
     {
         return _Team;
     }
@@ -142,9 +151,38 @@ public class Script_Enemy_Base : MonoBehaviour
         return _Player;
     }
 
+    public void RotateEnemy(Vector3 target)
+    {
+        Vector3 targetDirection = target - transform.position;
+        float rotationSpeed = 3;
+        float singleStep = rotationSpeed * Time.deltaTime;
+
+        Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
+
+        transform.rotation = Quaternion.LookRotation(newDirection);
+    }
+
     public void move()
     {
         _Agent.speed = _MovementSpeeds["running"];
+
+        //if no path exists
+        if (_CurrentPath == null)
+        {
+            _CurrentPath = GetPlayerLocation();
+        }
+        //If Player deviated from the current path by 1 unit recalculate path
+        float distanceFromTarget = Vector3.Distance(_CurrentPath, GetPlayerLocation());
+        if (distanceFromTarget > 6.0f)
+        {
+            //If player is current flanking recalculate the path with a flanking position
+            if (_IsFlanking)
+            {
+                SetFlankPosition();
+            }
+        } else if (distanceFromTarget >= 1.0f){
+            _CurrentPath = GetPlayerLocation();
+        }
         /*
         * If flank path is complete, turn off flanking variable and
         * just navigate to player normally
@@ -153,19 +191,18 @@ public class Script_Enemy_Base : MonoBehaviour
         {
             SetFlank(false);
         }
+
         if (_IsFlanking)
         {
-            //If flank position is too far from Player, reset flanking position
-            if (Vector3.Distance(GetPlayerLocation(), gameObject.transform.position) > 6)
+            //Initiate first flank
+            if (_FirstFlank)
             {
                 SetFlankPosition();
             }
-            _Agent.SetDestination(_FlankPosition);
         }
-        else
-        {
-            _Agent.SetDestination(_Player.transform.position);
-        }
+        //Move player to _CurrentPath
+
+        _Agent.SetDestination(_CurrentPath);
     }
 
     public void stopMoving()
@@ -173,12 +210,17 @@ public class Script_Enemy_Base : MonoBehaviour
         _Agent.isStopped = true;
     }
 
-    public Vector3 getAgentVelocity()
+    public void UnlockMovement()
+    {
+        _Agent.isStopped = false;
+    }
+
+    public Vector3 GetAgentVelocity()
     {
         return _Agent.velocity;
     }
 
-    public float getAngularSpeed()
+    public float GetAngularSpeed()
     {
         return _Agent.angularSpeed;
     }
@@ -189,7 +231,7 @@ public class Script_Enemy_Base : MonoBehaviour
     }
 
     /* Tells enemy that a projectile threat will hit it */
-    public void threat(GameObject obj)
+    public void Threat(GameObject obj)
     {
         // Only give the ability to block if the enemy is aware
         _ThreatObj = obj;
@@ -206,7 +248,7 @@ public class Script_Enemy_Base : MonoBehaviour
         return _Player.transform.position;
     }
 
-    public bool isPlayerSneaking()
+    public bool IsPlayerSneaking()
     {
         return false;
     }
@@ -238,27 +280,40 @@ public class Script_Enemy_Base : MonoBehaviour
         }
     }
 
+    public bool CanSeePlayerNarrow()
+    {
+        Vector3 forward = transform.TransformDirection(Vector3.forward);
+        Vector3 toOther = _Player.transform.position - transform.position;
+
+        //-1 = behind; 0 = perpendicular; 1 = front
+        if (Vector3.Dot(forward, toOther) > 0.9)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     private NavMeshAgent _Agent;
+    private NavMeshPath _Path;
+    private Vector3 _CurrentPath;
+    private bool _FirstFlank;
+    const float RotationDamping = 5.5f;
+    private Rigidbody _Rd;
+    private Vector3 _TargetVelocity;
+    private float _LastSquareMagnitude;
     private GameObject _Player;
     private Script_Player_Movement PlayerScript;
     private Animator _PlayerAnim;
-
     private Dictionary<string, float> _MovementSpeeds; //collection of movment speed data
-
     private GameObject _ThreatObj;
     private bool _IsUnderThreat = false;
     private bool _IsBlocking = false;
-
-    //Team is initialized under SetTeam()
-    private List<GameObject> _Team;
-
+    private List<GameObject> _Team; //Team is initialized under SetTeam()
     private System.Type _EnemyType;
-
     private GameObject _ParentSpawn;
-
     private bool _IsFlanking;
-
     private float _FlockingRadius = 5;
-
-    private Vector3 _FlankPosition;
 }

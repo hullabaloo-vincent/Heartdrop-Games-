@@ -48,8 +48,10 @@ public class Script_Enemy_Thug : MonoBehaviour
                     anim.SetBool("isWalking", true);
                 }
 
-                if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
+                if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") &&
+                !anim.GetBool("isPunching") && !anim.GetBool("isKicking"))
                 {
+                    aiBase.UnlockMovement();
                     aiBase.move();
                 }
 
@@ -57,26 +59,25 @@ public class Script_Enemy_Thug : MonoBehaviour
                  * If thug is not currently moving and is not currently attacking
                  * or blocking, make sure its default animation is idle
                  */
-                if (aiBase.getAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer && Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.6f &&
+                if (aiBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer && Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.6f &&
                     !anim.GetBool("isAttacking"))
                 {
                     resetAnimation();
                     anim.SetBool("isIdle", true);
-                    ResetKinematics();
                 }
 
                 /*
                 * The enemy is walking yet they are moving nowhere; the enemy might be stuck behind
                 * other entities. This will change their course to flanking instead
                 */
-                if (aiBase.getAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer)
+                if (aiBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer)
                 {
                     aiBase.SetFlankPosition();
                     aiBase.SetFlank(true);
                 }
 
                 //Remove flank behavior if all teammates are dead
-                if (aiBase.getTeam().Count == 0)
+                if (aiBase.GetTeam().Count == 0)
                 {
                     aiBase.SetFlank(false);
                 }
@@ -85,8 +86,9 @@ public class Script_Enemy_Thug : MonoBehaviour
                  * If player is within punching range and is in front of the thug, start attacking
                  */
                 if (Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.5f &&
-                    aiBase.CanSeePlayer() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking())
+                    aiBase.CanSeePlayerNarrow() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking() && !_FixRotation)
                 {
+                    aiBase.stopMoving();
                     int attackChooser = Random.Range(1, 10);
                     if (attackChooser <= 4)
                     {
@@ -107,15 +109,14 @@ public class Script_Enemy_Thug : MonoBehaviour
                 /*
                  * If player goes outside of sight range, rotate towards player
                  */
-                if (!aiBase.CanSeePlayer() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking())
+                if (!aiBase.CanSeePlayerNarrow() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking())
                 {
-                    Vector3 targetDirection = aiBase.GetPlayerLocation() - transform.position;
-                    float rotationSpeed = 3;
-                    float singleStep = rotationSpeed * Time.deltaTime;
-
-                    Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
-
-                    transform.rotation = Quaternion.LookRotation(newDirection);
+                    _FixRotation = true;
+                    aiBase.RotateEnemy(aiBase.GetPlayerLocation());
+                }
+                else if (aiBase.CanSeePlayerNarrow() && _FixRotation)
+                {
+                    _FixRotation = false;
                 }
                 //If the enemy is attacking but cannot see the player anymore try to move to a new spot
                 if (!aiBase.CanSeePlayer() && !aiBase.IsFlanking() && anim.GetBool("isAttacking"))
@@ -241,30 +242,14 @@ public class Script_Enemy_Thug : MonoBehaviour
         yield return 0;
     }
 
-    private void ResetKinematics()
-    {
-        rd.isKinematic = true;
-        StartCoroutine("KinematicSet");
-    }
-    private void SetKinematicState(bool value)
-    {
-        rd.isKinematic = value;
-    }
-    IEnumerator KinematicSet()
-    {
-        yield return new WaitForSeconds(0.2f);
-        SetKinematicState(false);
-        yield return 0;
-    }
-
     private void RemoveFromTeam()
     {
         //Remove room enemy count
         aiBase.GetSpawnActor().GetComponent<Script_Enemy_Spawning>().RemoveFromList(gameObject);
-        for (int i = 0; i < aiBase.getTeam().Count; i++)
+        for (int i = 0; i < aiBase.GetTeam().Count; i++)
         {
             //Remove self from every team list
-            aiBase.getTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
+            aiBase.GetTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
         }
     }
 
@@ -300,9 +285,9 @@ public class Script_Enemy_Thug : MonoBehaviour
     #region Blocking Animation Controls
     public void blockingStart()
     {
+        aiBase.stopMoving();
         isBlocking = true;
         blockDecision = false;
-        ResetKinematics();
     }
     public void blockingEnd()
     {
@@ -326,7 +311,6 @@ public class Script_Enemy_Thug : MonoBehaviour
         anim.SetBool("isBlocking", false);
         anim.SetBool("isAttacking", false);
         anim.SetBool("isIdle", true);
-        ResetKinematics();
     }
     public void turnOff_takeDamageHeavy()
     {
@@ -334,7 +318,6 @@ public class Script_Enemy_Thug : MonoBehaviour
         anim.SetBool("tookDamage_heavy", false);
         anim.SetBool("isBlocking", false);
         anim.SetBool("isIdle", true);
-        ResetKinematics();
     }
     #endregion
     #region Death Animation Controls
@@ -353,17 +336,16 @@ public class Script_Enemy_Thug : MonoBehaviour
     {
         anim.SetBool("isDodging", false);
         anim.SetBool("isIdle", true);
-        ResetKinematics();
     }
     #endregion
     #region Dodge Back
     public void DodgeBackStart()
     {
+        aiBase.stopMoving();
         isDodging = true;
         blockDecision = false;
         anim.SetBool("isPunching", false);
         anim.SetBool("isWalking", false);
-        ResetKinematics();
     }
     public void DodgeBackEnd()
     {
@@ -380,8 +362,8 @@ public class Script_Enemy_Thug : MonoBehaviour
     #region Turn on Attack
     public void TurnOnAttack()
     {
+        aiBase.stopMoving();
         anim.SetBool("isAttacking", true);
-        ResetKinematics();
     }
     #endregion
 
@@ -408,4 +390,5 @@ public class Script_Enemy_Thug : MonoBehaviour
     bool midPunch = false;
     bool isDodging = false;
     bool CanRecieveDamage = true;
+    private bool _FixRotation = false;
 }

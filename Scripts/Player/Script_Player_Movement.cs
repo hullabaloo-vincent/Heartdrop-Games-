@@ -324,7 +324,7 @@ public class Script_Player_Movement : MonoBehaviour
                 _Anim.SetBool("walkForward", true);
             }
             _MovementDirection = angles;
-            float turningRate = 150f;
+            float turningRate = 200f;
             _Rd.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
         }
     }
@@ -408,10 +408,8 @@ public class Script_Player_Movement : MonoBehaviour
             if (damage >= 0.4)
             {
                 _Anim.SetBool("tookDamage_heavy", true);
-                //Set forward y value to player's standing y position
-                Vector3 newForward = new Vector3(transform.forward.x, transform.position.y, transform.forward.z);
                 //Move player backwards
-                //_Controller.Move((newForward * -1) * 10f * Time.deltaTime);
+                Vector3 newForward = new Vector3(transform.forward.x, transform.position.y, transform.forward.z);
             }
             else
             {
@@ -444,6 +442,7 @@ public class Script_Player_Movement : MonoBehaviour
     {
         resetAnimation();
         SetIdle();
+        _Rd.velocity = Vector3.zero;
         StartCoroutine("DashCooldown");
     }
 
