@@ -7,135 +7,136 @@ public class Script_Enemy_Thug : MonoBehaviour
 
     void Start()
     {
-        anim = GetComponent<Animator>();
-        aiBase = GetComponent<Script_Enemy_Base>();
-        rd = GetComponent<Rigidbody>();
-        rightHand = gameObject.transform.Find(
+        _Anim = GetComponent<Animator>();
+        _AIBase = GetComponent<Script_Enemy_Base>();
+        _Rd = GetComponent<Rigidbody>();
+        _RightHand = gameObject.transform.Find(
             "Thug_rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
             ).gameObject; //get reference to right hand
-        leftHand = gameObject.transform.Find(
+        _LeftHand = gameObject.transform.Find(
             "Thug_rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand"
             ).gameObject; //get reference to left hand
-        rightFoot = gameObject.transform.Find(
+        _RightFoot = gameObject.transform.Find(
             "Thug_rig/mixamorig:Hips/mixamorig:RightUpLeg/mixamorig:RightLeg/mixamorig:RightFoot"
             ).gameObject; //get reference to right hand
     }
 
     void Update()
     {
-        if (!anim.GetBool("isDying"))
+        if (!_Anim.GetBool("isDying"))
         {
             /*
              * Checks if player is in line of sight OR is being loud around the enemy
              * @returns seenPlayer
              */
-            if ((Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= visibilityDistance && aiBase.CanSeePlayer()) ||
-                (Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= visibilityDistance && (aiBase.IsPlayerWalking() || aiBase.IsPlayerRunning())))
+            if ((Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && _AIBase.CanSeePlayer()) ||
+                (Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && (_AIBase.IsPlayerWalking() || _AIBase.IsPlayerRunning())))
             {
                 seenPlayer = true;
-                anim.SetBool("isAttackingPlayer", true);
+                _Anim.SetBool("isAttackingPlayer", true);
             }
-            if (!isDodging)
+            if (!IsDodging)
             {
                 /*
                  * If player is farther than the thug can punch, and is not currently attacking
                  * or blocking, move towards player and start walking animation
                  */
-                if (seenPlayer && Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) > 1.6f &&
-                    !anim.GetBool("isAttacking"))
+                if (seenPlayer && Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) > 1.6f &&
+                    !_Anim.GetBool("isAttacking"))
                 {
                     resetAnimation();
-                    anim.SetBool("isWalking", true);
+                    _Anim.SetBool("isWalking", true);
                 }
 
-                if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") &&
-                !anim.GetBool("isPunching") && !anim.GetBool("isKicking"))
+                if (_Anim.GetCurrentAnimatorStateInfo(0).IsName("Walk") &&
+                !_Anim.GetBool("isPunching") && !_Anim.GetBool("isKicking") &&
+                !_Anim.GetBool("tookDamage_heavy") && !_Anim.GetBool("tookDamage_light"))
                 {
-                    aiBase.UnlockMovement();
-                    aiBase.move();
+                    _AIBase.UnlockMovement();
+                    _AIBase.move();
                 }
 
                 /*
                  * If thug is not currently moving and is not currently attacking
                  * or blocking, make sure its default animation is idle
                  */
-                if (aiBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer && Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.6f &&
-                    !anim.GetBool("isAttacking"))
+                if (_AIBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer && Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 1.6f &&
+                    !_Anim.GetBool("isAttacking"))
                 {
                     resetAnimation();
-                    anim.SetBool("isIdle", true);
+                    _Anim.SetBool("isIdle", true);
                 }
 
                 /*
                 * The enemy is walking yet they are moving nowhere; the enemy might be stuck behind
                 * other entities. This will change their course to flanking instead
                 */
-                if (aiBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer)
+                if (_AIBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer)
                 {
-                    aiBase.SetFlankPosition();
-                    aiBase.SetFlank(true);
+                    _AIBase.SetFlankPosition();
+                    _AIBase.SetFlank(true);
                 }
 
                 //Remove flank behavior if all teammates are dead
-                if (aiBase.GetTeam().Count == 0)
+                if (_AIBase.GetTeam().Count == 0)
                 {
-                    aiBase.SetFlank(false);
+                    _AIBase.SetFlank(false);
                 }
 
                 /*
                  * If player is within punching range and is in front of the thug, start attacking
                  */
-                if (Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.5f &&
-                    aiBase.CanSeePlayerNarrow() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking() && !_FixRotation)
+                if (Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 1.5f &&
+                    _AIBase.CanSeePlayerNarrow() && !_Anim.GetBool("isAttacking") && !_AIBase.IsFlanking() && !_FixRotation)
                 {
-                    aiBase.stopMoving();
+                    _AIBase.stopMoving();
                     int attackChooser = Random.Range(1, 10);
                     if (attackChooser <= 4)
                     {
-                        anim.SetBool("isPunching", true);
+                        _Anim.SetBool("isPunching", true);
                     }
                     if (attackChooser >= 5 && attackChooser <= 8)
                     {
-                        anim.SetBool("isChargedPunch", true);
+                        _Anim.SetBool("isChargedPunch", true);
                     }
                     if (attackChooser >= 9 && attackChooser <= 10)
                     {
-                        anim.SetBool("isKicking", true);
+                        _Anim.SetBool("isKicking", true);
                     }
-                    anim.SetBool("isAttacking", true);
+                    _Anim.SetBool("isAttacking", true);
                     isBlocking = false;
                 }
 
                 /*
                  * If player goes outside of sight range, rotate towards player
                  */
-                if (!aiBase.CanSeePlayerNarrow() && !anim.GetBool("isAttacking") && !aiBase.IsFlanking())
+                if (!_AIBase.CanSeePlayerNarrow() && !_Anim.GetBool("isAttacking") && !_AIBase.IsFlanking())
                 {
                     _FixRotation = true;
-                    aiBase.RotateEnemy(aiBase.GetPlayerLocation());
+                    _AIBase.RotateEnemy(_AIBase.GetPlayerLocation());
                 }
-                else if (aiBase.CanSeePlayerNarrow() && _FixRotation)
+                else if (_AIBase.CanSeePlayerNarrow() && _FixRotation)
                 {
                     _FixRotation = false;
                 }
                 //If the enemy is attacking but cannot see the player anymore try to move to a new spot
-                if (!aiBase.CanSeePlayer() && !aiBase.IsFlanking() && anim.GetBool("isAttacking"))
+                if (!_AIBase.CanSeePlayer() && !_AIBase.IsFlanking() && _Anim.GetBool("isAttacking"))
                 {
-                    aiBase.SetFlankPosition();
-                    aiBase.SetFlank(true);
+                    _AIBase.SetFlankPosition();
+                    _AIBase.SetFlank(true);
                 }
 
                 //Turn off flanking if the player is really close (EX: Player walks past enemy moving to flanking position)
-                if (Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 1.5f && aiBase.IsFlanking())
+                if (Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 1.5f && _AIBase.IsFlanking())
                 {
-                    aiBase.SetFlank(false);
+                    _AIBase.SetFlank(false);
                 }
 
                 if (GameObject.Find("PlayerPunch(Clone)") &&
-                    !anim.GetBool("tookDamage_light") &&
-                    !anim.GetBool("tookDamage_heavy") &&
+                    !_Anim.GetBool("tookDamage_light") &&
+                    !_Anim.GetBool("tookDamage_heavy") &&
                     !blockDecision &&
-                    seenPlayer && Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) < 3f)
+                    seenPlayer && Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) < 3f)
                 {
                     //if the enemy is in mid punch, don't block
                     if (midPunch)
@@ -147,36 +148,36 @@ public class Script_Enemy_Thug : MonoBehaviour
                         blockDecision = true;
                         int blockChooser = Random.Range(1, 4);
                         // Debug.Log("Blocking with: " + blockChooser);
-                        if (aiBase.CanSeePlayer())
+                        if (_AIBase.CanSeePlayer())
                         {
                             resetAnimation();
                             //turn off physics forces
                             //SetRigidBodyKinematic(true);
                             if (blockChooser <= 2)
                             {
-                                anim.SetBool("isBlocking", true);
-                                anim.SetBool("isDodging", false);
+                                _Anim.SetBool("isBlocking", true);
+                                _Anim.SetBool("isDodging", false);
                             }
                             else
                             {
-                                anim.SetBool("isBlocking", false);
-                                anim.SetBool("isDodging", true);
+                                _Anim.SetBool("isBlocking", false);
+                                _Anim.SetBool("isDodging", true);
                             }
                         }
                     }
                 }
             }
-            if (isDodging)
+            if (IsDodging)
             {
                 //  transform.Translate((transform.forward * -1) * 3f * Time.deltaTime);
             }
 
-            if (aiBase.GetPlayerFocus() == null &&
-             Vector3.Distance(aiBase.GetPlayerLocation(), gameObject.transform.position) <= 5f)
+            if (_AIBase.GetPlayerFocus() == null &&
+             Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 5f)
             {
-                aiBase.PlayerReferece().GetComponent<Script_Player_Movement>().SetFocusEnemy(gameObject);
+                _AIBase.PlayerReferece().GetComponent<Script_Player_Movement>().SetFocusEnemy(gameObject);
                 //Tells the team that it is being focused by the player
-                aiBase.PlayerFocused();
+                _AIBase.PlayerFocused();
             }
         }
     }
@@ -184,35 +185,36 @@ public class Script_Enemy_Thug : MonoBehaviour
     //Called via animation event from Anim_Player_Punch
     public void punchRight()
     {
-        GameObject playerHit = Instantiate(punchObj, rightHand.transform.position, rightHand.transform.rotation);
+        GameObject playerHit = Instantiate(punchObj, _RightHand.transform.position, _RightHand.transform.rotation);
     }
     public void punchLeft()
     {
-        GameObject playerHit = Instantiate(punchObj, leftHand.transform.position, leftHand.transform.rotation);
+        GameObject playerHit = Instantiate(punchObj, _LeftHand.transform.position, _LeftHand.transform.rotation);
     }
 
     public void kick()
     {
-        GameObject playerHit = Instantiate(kickObj, rightFoot.transform.position, rightFoot.transform.rotation);
+        GameObject playerHit = Instantiate(kickObj, _RightFoot.transform.position, _RightFoot.transform.rotation);
     }
 
     public void RecieveDamage(float damage)
     {
-        if (!isBlocking && !anim.GetBool("isDying") && CanRecieveDamage)
+        if (!isBlocking && !_Anim.GetBool("isDying") && CanRecieveDamage)
         {
-            health -= damage;
-            if (health > 0)
+            Health -= damage;
+            if (Health > 0)
             {
                 resetAnimation();
                 CanRecieveDamage = false;
+                _AIBase.stopMoving();
                 if (damage > 2f)
                 {
-                    anim.SetBool("tookDamage_heavy", true);
+                    _Anim.SetBool("tookDamage_heavy", true);
                     Camera.main.GetComponentInParent<Script_Camera_Shake>().TriggerShake(0.3f);
                 }
                 else
                 {
-                    anim.SetBool("tookDamage_light", true);
+                    _Anim.SetBool("tookDamage_light", true);
                     Camera.main.GetComponentInParent<Script_Camera_Shake>().TriggerShake(0.1f);
                 }
             }
@@ -220,16 +222,16 @@ public class Script_Enemy_Thug : MonoBehaviour
             {
                 if (damage > 2f)
                 {
-                    anim.SetBool("isDying_heavy", true);
+                    _Anim.SetBool("isDying_heavy", true);
                 }
                 else
                 {
-                    anim.SetBool("isDying_light", true);
+                    _Anim.SetBool("isDying_light", true);
                 }
                 Camera.main.GetComponentInParent<Script_Camera_Shake>().TriggerShake(0.5f);
-                anim.SetBool("isDying", true);
+                _Anim.SetBool("isDying", true);
                 minimapObject.SetActive(false);
-                aiBase.PlayerReferece().GetComponent<Script_Player_Movement>().StopFocus();
+                _AIBase.PlayerReferece().GetComponent<Script_Player_Movement>().StopFocus();
                 RemoveFromTeam();
             }
             StartCoroutine("DamageBuffer");
@@ -245,21 +247,21 @@ public class Script_Enemy_Thug : MonoBehaviour
     private void RemoveFromTeam()
     {
         //Remove room enemy count
-        aiBase.GetSpawnActor().GetComponent<Script_Enemy_Spawning>().RemoveFromList(gameObject);
-        for (int i = 0; i < aiBase.GetTeam().Count; i++)
+        _AIBase.GetSpawnActor().GetComponent<Script_Enemy_Spawning>().RemoveFromList(gameObject);
+        for (int i = 0; i < _AIBase.GetTeam().Count; i++)
         {
             //Remove self from every team list
-            aiBase.GetTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
+            _AIBase.GetTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
         }
     }
 
     private void resetAnimation()
     {
-        foreach (AnimatorControllerParameter parameter in anim.parameters)
+        foreach (AnimatorControllerParameter parameter in _Anim.parameters)
         {
-            anim.SetBool(parameter.name, false);
+            _Anim.SetBool(parameter.name, false);
         }
-        anim.SetBool("isAttackingPlayer", true);
+        _Anim.SetBool("isAttackingPlayer", true);
     }
 
     #region Punching Animation Controls
@@ -273,19 +275,19 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
     public void stopPunch()
     {
-        anim.SetBool("isPunching", false);
+        _Anim.SetBool("isPunching", false);
     }
     #endregion
     #region Kicking Animation Controls
     public void stopKick()
     {
-        anim.SetBool("isKicking", false);
+        _Anim.SetBool("isKicking", false);
     }
     #endregion
     #region Blocking Animation Controls
     public void blockingStart()
     {
-        aiBase.stopMoving();
+        _AIBase.stopMoving();
         isBlocking = true;
         blockDecision = false;
     }
@@ -295,38 +297,41 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
     public void turnOffBlocking()
     {
-        anim.SetBool("isBlocking", false);
+        _Anim.SetBool("isBlocking", false);
     }
     #endregion
     #region Charged Punch Animation Controls
     public void turnOff_ChargedAttack()
     {
-        anim.SetBool("isChargedPunch", false);
+        resetAnimation();
+        _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Damage Animation Controls
     public void turnOff_takeDamageLight()
     {
-        anim.SetBool("tookDamage_light", false);
-        anim.SetBool("isBlocking", false);
-        anim.SetBool("isAttacking", false);
-        anim.SetBool("isIdle", true);
+        _AIBase.UnlockMovement();
+        _Anim.SetBool("tookDamage_light", false);
+        _Anim.SetBool("isBlocking", false);
+        _Anim.SetBool("isAttacking", false);
+        _Anim.SetBool("isIdle", true);
     }
     public void turnOff_takeDamageHeavy()
     {
-        anim.SetBool("isAttacking", false);
-        anim.SetBool("tookDamage_heavy", false);
-        anim.SetBool("isBlocking", false);
-        anim.SetBool("isIdle", true);
+        _AIBase.UnlockMovement();
+        _Anim.SetBool("isAttacking", false);
+        _Anim.SetBool("tookDamage_heavy", false);
+        _Anim.SetBool("isBlocking", false);
+        _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Death Animation Controls
     public void turnOffDeath()
     {
         transform.position = new Vector3(transform.position.x, -1.5f, transform.position.z);
-        anim.SetBool("isDying_heavy", false);
-        anim.SetBool("isDying_light", false);
-        rd.isKinematic = true;
+        _Anim.SetBool("isDying_heavy", false);
+        _Anim.SetBool("isDying_light", false);
+        _Rd.isKinematic = true;
         //Destroys the collider on the enemy
         Destroy(GetComponent<CapsuleCollider>());
     }
@@ -334,61 +339,59 @@ public class Script_Enemy_Thug : MonoBehaviour
     #region Dodge Back Animation Controls
     public void turnOffDodgeBack()
     {
-        anim.SetBool("isDodging", false);
-        anim.SetBool("isIdle", true);
+        _Anim.SetBool("isDodging", false);
+        _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Dodge Back
     public void DodgeBackStart()
     {
-        aiBase.stopMoving();
-        isDodging = true;
+        _AIBase.stopMoving();
+        IsDodging = true;
         blockDecision = false;
-        anim.SetBool("isPunching", false);
-        anim.SetBool("isWalking", false);
+        _Anim.SetBool("isPunching", false);
+        _Anim.SetBool("isWalking", false);
     }
     public void DodgeBackEnd()
     {
-        isDodging = false;
-        anim.SetBool("isDodging", false);
+        IsDodging = false;
+        _Anim.SetBool("isDodging", false);
     }
     #endregion
     #region Turn off Attack
     public void TurnOffAttack()
     {
-        anim.SetBool("isAttacking", false);
+        _Anim.SetBool("isAttacking", false);
     }
     #endregion
     #region Turn on Attack
     public void TurnOnAttack()
     {
-        aiBase.stopMoving();
-        anim.SetBool("isAttacking", true);
+        _AIBase.stopMoving();
+        _Anim.SetBool("isAttacking", true);
     }
     #endregion
 
-    Animator anim;
-    Script_Enemy_Base aiBase;
-    GameObject rightHand;
-    GameObject leftHand;
-    GameObject rightFoot;
+    private Animator _Anim;
+    private Script_Enemy_Base _AIBase;
+    private GameObject _RightHand;
+    private GameObject _LeftHand;
+    private GameObject _RightFoot;
     public GameObject punchObj;
     public GameObject kickObj;
     public GameObject rig;
     public GameObject minimapObject;
 
-    public GameObject arrow;
+    private Rigidbody _Rd;
 
-    Rigidbody rd;
-
-    public float health = 5f;
-    float visibilityDistance = 7f;
-    float visibilityDistance_multiplyer = 2f;
+    public float Health = 5f;
+    private float _VisibilityDistance = 7f;
+    private float _VisibilityDistanceMultiplyer = 2f;
     bool seenPlayer = false;
     bool isBlocking = false;
     bool blockDecision = false;
     bool midPunch = false;
-    bool isDodging = false;
+    private bool IsDodging = false;
     bool CanRecieveDamage = true;
     private bool _FixRotation = false;
 }

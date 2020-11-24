@@ -7,7 +7,6 @@ public class Script_Enemy_Base : MonoBehaviour
 {
     void Start()
     {
-
         //Get custom enemy script, which will always be the third element
         Component[] enemyComponents = gameObject.GetComponents(typeof(Component));
         _EnemyType = enemyComponents[2].GetType();

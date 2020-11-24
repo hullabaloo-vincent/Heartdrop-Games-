@@ -28,6 +28,8 @@ public class Script_Player_Movement : MonoBehaviour
         _MovementSpeeds.Add("running", 4f);
         _MovementSpeeds.Add("dashing", 6f);
         _MovementSpeeds.Add("attackPunch", 20f);
+        _MovementSpeeds.Add("heavyRecoil", 20f);
+        _MovementSpeeds.Add("lightRecoil", 10f);
 
         _DebugObj = GameObject.FindGameObjectWithTag("Debug");
 
@@ -391,10 +393,10 @@ public class Script_Player_Movement : MonoBehaviour
         yield return 0;
     }
 
-    private void AttackForce(float _strength)
+    private void AttackForce(float strength)
     {
         //Move the player a tiny bit forwared with an attack
-        _Rd.MovePosition(_Rd.position + transform.forward * _strength * Time.deltaTime);
+        _Rd.MovePosition(_Rd.position + transform.forward * strength * Time.deltaTime);
     }
 
     //recieve damage from enemies
@@ -409,11 +411,12 @@ public class Script_Player_Movement : MonoBehaviour
             {
                 _Anim.SetBool("tookDamage_heavy", true);
                 //Move player backwards
-                Vector3 newForward = new Vector3(transform.forward.x, transform.position.y, transform.forward.z);
+                _Rd.MovePosition(_Rd.position + -transform.forward * _MovementSpeeds["heavyRecoil"] * Time.deltaTime);
             }
             else
             {
                 _Anim.SetBool("tookDamage_light", true);
+                _Rd.MovePosition(_Rd.position + -transform.forward * _MovementSpeeds["lightRecoil"] * Time.deltaTime);
             }
             PostUpdate.UpdateChromaticAberration(1.0f);
         }

@@ -21,30 +21,19 @@ public class Script_Player_Punch : MonoBehaviour
         Damage = newDamage;
     }
 
-    private void OnCollisionEnter(Collision other)
+    private void OnTriggerEnter(Collider other)
     {
         // force is how forcefully we will push the player away from the enemy.
-        float force = 10;
+        float force = 20;
         // If the object we hit is the enemy
         if (other.gameObject.tag == "Enemy" && !_DoOnce)
         {
             _DoOnce = true;
             _PlayerRef.HitLanded();
             other.gameObject.GetComponentInParent<Script_Enemy_Base>().RecieveDamage(Damage);
-            // Calculate Angle Between the collision point and the player
-            Vector3 dir = other.contacts[0].point - transform.position;
-            // We then get the opposite (-Vector3) and normalize it
-            dir = -dir.normalized;
-            // And finally we add force in the direction of dir and multiply it by force. 
-            // This will push back the player
-            //GetComponent<Rigidbody>().AddForce(dir * force);
             Rigidbody enemyRigidBody = other.gameObject.GetComponent<Rigidbody>();
-            // enemyRigidBody.AddForce(dir * force, ForceMode.Impulse);
 
-
-            Vector3 knock = _Player.transform.forward;
-            knock *= force;
-            enemyRigidBody.AddForce(knock);
+            enemyRigidBody.MovePosition(enemyRigidBody.position + -other.transform.forward * force * Time.deltaTime);
         }
     }
 
