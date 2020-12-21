@@ -1,1 +1,4 @@
 *.meta
+Scripts/Script_CurrentLOD.cs
+Scripts/Script_OrthoLOD.cs
+Scripts/Room_Scripts/Script_Room_Deloader.cs
