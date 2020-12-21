@@ -24,7 +24,7 @@ public class Script_Player_Punch : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // force is how forcefully we will push the player away from the enemy.
-        float force = 20;
+        float force = 8;
         // If the object we hit is the enemy
         if (other.gameObject.tag == "Enemy" && !_DoOnce)
         {
