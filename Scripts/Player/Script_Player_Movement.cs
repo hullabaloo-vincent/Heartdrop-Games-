@@ -9,7 +9,7 @@ public class Script_Player_Movement : MonoBehaviour
         _AttackCombo = new List<List<string>>();
         _AttackCombo.Add(new List<string> { "punch1", "punch2", "punch3" }); //Combo 1
         _AttackCombo.Add(new List<string> { "punch4" }); //Combo 2
-        _AttackCombo.Add(new List<string> { "punch6", "punch7", "punch8" }); //Combo 3
+        _AttackCombo.Add(new List<string> { "punch7", "punch8" }); //Combo 3
         _Anim = GetComponent<Animator>();
         _Rd = GetComponent<Rigidbody>();
 
@@ -27,11 +27,9 @@ public class Script_Player_Movement : MonoBehaviour
         _MovementSpeeds.Add("walking", 1f);
         _MovementSpeeds.Add("running", 4f);
         _MovementSpeeds.Add("dashing", 6f);
-        _MovementSpeeds.Add("attackPunch", 20f);
-        _MovementSpeeds.Add("heavyRecoil", 20f);
-        _MovementSpeeds.Add("lightRecoil", 10f);
-
-        _DebugObj = GameObject.FindGameObjectWithTag("Debug");
+        _MovementSpeeds.Add("attackPunch", 8f);
+        _MovementSpeeds.Add("heavyRecoil", 14f);
+        _MovementSpeeds.Add("lightRecoil", 8f);
 
         //map coordinates of player limbs
         _RightHand = gameObject.transform.Find(
@@ -151,13 +149,13 @@ public class Script_Player_Movement : MonoBehaviour
                 _Anim.SetBool("isPunching", true);
                 int Chain = Mathf.Clamp(_ChainLevel, _MinChain, _MaxChain);
                 _Anim.SetBool(_AttackCombo[Chain][Random.Range(0, _AttackCombo[Chain].Count)], true);
-                AttackForce(_MovementSpeeds["attackPunch"]);
             }
             else
             {
                 if (!_ActivatedSpell && !_Anim.GetBool("isDrinking") && _CanCast)
                 {
                     resetAnimation();
+                    Debug.Log("DRINKIN' ON THE JOB ARE YE");
                     _Anim.SetBool("isDrinking", true);
                 }
                 if (_ActivatedSpell && !_Anim.GetBool("isCasting"))
@@ -244,7 +242,8 @@ public class Script_Player_Movement : MonoBehaviour
             }
         }
 
-        if (_Anim.GetBool("isDashing")){
+        if (_Anim.GetBool("isDashing"))
+        {
             tempMoveSpeed = _MovementSpeeds["dashing"];
         }
 
@@ -393,9 +392,10 @@ public class Script_Player_Movement : MonoBehaviour
         yield return 0;
     }
 
-    private void AttackForce(float strength)
+    private void AttackForce()
     {
-        //Move the player a tiny bit forwared with an attack
+        float strength = _MovementSpeeds["attackPunch"];
+        //Move the player a tiny bit forwared with an attack 
         _Rd.MovePosition(_Rd.position + transform.forward * strength * Time.deltaTime);
     }
 
