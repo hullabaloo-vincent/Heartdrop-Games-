@@ -13,7 +13,7 @@ public class Script_Enemy_Punch : MonoBehaviour
     {
         if (other.gameObject.tag == "Player")
         {
-            other.gameObject.GetComponentInParent<Script_Player_Movement>().recieveDamage(damage, gameObject);
+            other.gameObject.GetComponentInParent<Script_Player_Movement>().RecieveDamage(damage, gameObject);
         }
     }
 
