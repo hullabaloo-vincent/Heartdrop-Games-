@@ -21,7 +21,7 @@ public class Script_Health : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Script_Player_Movement>().health;
+        playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<Script_Player_Movement>().Health;
         if (playerHealth != 1) {
             healthBubblesSurface.SetActive(false);
         }
