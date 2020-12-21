@@ -143,6 +143,10 @@ public class Script_Enemy_Base : MonoBehaviour
         {
             gameObject.GetComponent<Script_Enemy_Thug>().RecieveDamage(damage);
         }
+        if (_EnemyType.ToString() == "Script_Enemy_Bruiser")
+        {
+            gameObject.GetComponent<Script_Enemy_Bruiser>().RecieveDamage(damage);
+        }
     }
 
     public GameObject PlayerReferece()
