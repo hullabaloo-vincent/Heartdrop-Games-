@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Script_Enemy_Thug : MonoBehaviour
 {
-
     void Start()
     {
         _Anim = GetComponent<Animator>();
@@ -23,7 +23,7 @@ public class Script_Enemy_Thug : MonoBehaviour
 
     void Update()
     {
-        if (!_Anim.GetBool("isDying"))
+        if (!_Anim.GetBool("isDying") && !_IsDead)
         {
             /*
              * Checks if player is in line of sight OR is being loud around the enemy
@@ -169,10 +169,11 @@ public class Script_Enemy_Thug : MonoBehaviour
             }
             if (IsDodging)
             {
-                //  transform.Translate((transform.forward * -1) * 3f * Time.deltaTime);
+                float force = 2;
+                _Rd.MovePosition(_Rd.position + -transform.forward * force * Time.deltaTime);
             }
 
-            if (_AIBase.GetPlayerFocus() == null &&
+            if (_AIBase.GetPlayerFocus() == null && !_IsDead &&
              Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 5f)
             {
                 _AIBase.PlayerReferece().GetComponent<Script_Player_Movement>().SetFocusEnemy(gameObject);
@@ -311,36 +312,32 @@ public class Script_Enemy_Thug : MonoBehaviour
     public void turnOff_takeDamageLight()
     {
         _AIBase.UnlockMovement();
-        _Anim.SetBool("tookDamage_light", false);
-        _Anim.SetBool("isBlocking", false);
-        _Anim.SetBool("isAttacking", false);
+        resetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     public void turnOff_takeDamageHeavy()
     {
         _AIBase.UnlockMovement();
-        _Anim.SetBool("isAttacking", false);
-        _Anim.SetBool("tookDamage_heavy", false);
-        _Anim.SetBool("isBlocking", false);
+        resetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Death Animation Controls
     public void turnOffDeath()
     {
-        transform.position = new Vector3(transform.position.x, -1.5f, transform.position.z);
-        _Anim.SetBool("isDying_heavy", false);
-        _Anim.SetBool("isDying_light", false);
-        _Rd.isKinematic = true;
-        //Destroys the collider on the enemy
+        _IsDead = true;
+        resetAnimation();
+        _AIBase.PlayerReferece().GetComponent<Script_Player_Movement>().StopFocus();
         Destroy(GetComponent<CapsuleCollider>());
+        Destroy(GetComponent<NavMeshAgent>());
+        Destroy(GetComponent<Rigidbody>());
     }
     #endregion
     #region Dodge Back Animation Controls
     public void turnOffDodgeBack()
     {
-        _Anim.SetBool("isDodging", false);
-        _Anim.SetBool("isIdle", true);
+        resetAnimation();
+        _Anim.SetBool("isIdle", true); ;
     }
     #endregion
     #region Dodge Back
@@ -348,20 +345,21 @@ public class Script_Enemy_Thug : MonoBehaviour
     {
         _AIBase.stopMoving();
         IsDodging = true;
-        blockDecision = false;
-        _Anim.SetBool("isPunching", false);
-        _Anim.SetBool("isWalking", false);
+        resetAnimation();
+        _Anim.SetBool("isIdle", true);
     }
     public void DodgeBackEnd()
     {
+        resetAnimation();
         IsDodging = false;
-        _Anim.SetBool("isDodging", false);
+        _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Turn off Attack
     public void TurnOffAttack()
     {
-        _Anim.SetBool("isAttacking", false);
+        resetAnimation();
+        _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Turn on Attack
@@ -387,11 +385,13 @@ public class Script_Enemy_Thug : MonoBehaviour
     public float Health = 5f;
     private float _VisibilityDistance = 7f;
     private float _VisibilityDistanceMultiplyer = 2f;
+    private bool _IsDead = false;
     bool seenPlayer = false;
     bool isBlocking = false;
     bool blockDecision = false;
     bool midPunch = false;
     private bool IsDodging = false;
+
     bool CanRecieveDamage = true;
     private bool _FixRotation = false;
 }
