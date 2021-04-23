@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-
 public class Script_Enemy_Base : MonoBehaviour
 {
     void Start()
@@ -27,6 +26,10 @@ public class Script_Enemy_Base : MonoBehaviour
         _MovementSpeeds = new Dictionary<string, float>();
         _MovementSpeeds.Add("walking", 1f);
         _MovementSpeeds.Add("running", 3f);
+
+        _FocusGameObject = gameObject.transform.Find(
+            "Enemy_Selection"
+        ).gameObject;
     }
 
     private void FixedUpdate()
@@ -92,20 +95,36 @@ public class Script_Enemy_Base : MonoBehaviour
         {
             //Tell everyone else to flank
             //Set unique flank position
-            go.GetComponent<Script_Enemy_Base>().SetFlankPosition();
-            //Set flank status to get them moving
-            go.GetComponent<Script_Enemy_Base>().SetFlank(true);
+            try
+            {
+                go.GetComponent<Script_Enemy_Base>().SetFlankPosition();
+                //Set flank status to get them moving
+                go.GetComponent<Script_Enemy_Base>().SetFlank(true);
+            }
+            catch (System.NullReferenceException NRE)
+            {
+                // Do nothing. Assume that the team member was killed
+            }
         }
+        _FocusGameObject.SetActive(true);
         //is under attack
     }
 
     public void StopPlayerFocus()
     {
+        _FocusGameObject.SetActive(false);
         //Turn off flank for everyone
         foreach (GameObject go in _Team)
         {
             //Set flank status to get them moving
-            go.GetComponent<Script_Enemy_Base>().SetFlank(false);
+            try
+            {
+                go.GetComponent<Script_Enemy_Base>().SetFlank(false);
+            }
+            catch (System.NullReferenceException NRE)
+            {
+                // Do nothing. Assume that the team member was killed
+            }
         }
     }
 
@@ -130,11 +149,30 @@ public class Script_Enemy_Base : MonoBehaviour
 
     public void AlertTeam()
     {
+        GetSpawnActor().GetComponent<Script_Enemy_Spawning>().SetAlertStatus(true);
         //If the player is focusing on attacking
-        if (_EnemyType.ToString() == "Script_Enemy_Thug")
+        foreach (GameObject t in _Team)
         {
-            //gameObject.GetComponent<Script_Enemy_Thug>().
+            string type = t.GetComponent<Script_Enemy_Base>().GetEnemyType().ToString();
+            if (type == "Script_Enemy_Thug")
+            {
+                t.GetComponent<Script_Enemy_Thug>().Alerted();
+            }
+            if (type == "Script_Enemy_Bruiser")
+            {
+                t.GetComponent<Script_Enemy_Bruiser>().Alerted();
+            }
         }
+    }
+
+    public System.Type GetEnemyType()
+    {
+        return _EnemyType;
+    }
+
+    public bool GetAlertStatus()
+    {
+        return GetSpawnActor().GetComponent<Script_Enemy_Spawning>().GetAlertStatus();
     }
 
     public void RecieveDamage(float damage)
@@ -183,7 +221,9 @@ public class Script_Enemy_Base : MonoBehaviour
             {
                 SetFlankPosition();
             }
-        } else if (distanceFromTarget >= 1.0f){
+        }
+        else if (distanceFromTarget >= 1.0f)
+        {
             _CurrentPath = GetPlayerLocation();
         }
         /*
@@ -312,6 +352,7 @@ public class Script_Enemy_Base : MonoBehaviour
     private Animator _PlayerAnim;
     private Dictionary<string, float> _MovementSpeeds; //collection of movment speed data
     private GameObject _ThreatObj;
+    private GameObject _FocusGameObject;
     private bool _IsUnderThreat = false;
     private bool _IsBlocking = false;
     private List<GameObject> _Team; //Team is initialized under SetTeam()
