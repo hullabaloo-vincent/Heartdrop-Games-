@@ -19,6 +19,7 @@ public class Script_Door_Open : MonoBehaviour
         {
             _NotifRef.SetActiveNotif(false);
             _Anim.SetBool("isOpen", true);
+            //WallObj.SetVisibility(false);
         }
     }
 
@@ -28,7 +29,6 @@ public class Script_Door_Open : MonoBehaviour
         {
             _InActivationRange = true;
             _NotifRef.SetActiveNotif(true);
-            Debug.Log(_InActivationRange);
         }
     }
 
@@ -39,7 +39,6 @@ public class Script_Door_Open : MonoBehaviour
             _InActivationRange = false;
             _Anim.SetBool("isOpen", false);
             _NotifRef.SetActiveNotif(false);
-            Debug.Log(_InActivationRange);
         }
     }
 
@@ -51,6 +50,8 @@ public class Script_Door_Open : MonoBehaviour
     {
         _TransitionState = false;
     }
+
+    public Script_Transparency_Individual WallObj;
 
     private Animator _Anim;
     private GameObject _PlayerRef;
