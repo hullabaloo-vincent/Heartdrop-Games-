@@ -32,8 +32,12 @@ public class Script_Enemy_Bruiser : MonoBehaviour
             if ((Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && _AIBase.CanSeePlayer()) ||
                 (Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && (_AIBase.IsPlayerWalking() || _AIBase.IsPlayerRunning())))
             {
-                seenPlayer = true;
-                _Anim.SetBool("isAttackingPlayer", true);
+                if (!_AIBase.GetAlertStatus())
+                {
+                    _AIBase.AlertTeam();
+                }
+
+                Alerted();
             }
             if (!IsDodging)
             {
@@ -198,9 +202,15 @@ public class Script_Enemy_Bruiser : MonoBehaviour
         GameObject playerHit = Instantiate(headbuttObj, _RightFoot.transform.position, _RightFoot.transform.rotation);
     }
 
+    public void StopHeadbutt()
+    {
+        resetAnimation();
+        _Anim.SetBool("isIdle", true);
+    }
+
     public void RecieveDamage(float damage)
     {
-        if (!isBlocking && !_Anim.GetBool("isDying") && CanRecieveDamage)
+        if (!isBlocking && !_Anim.GetBool("isDying") && CanRecieveDamage & !_IsDead)
         {
             Health -= damage;
             if (Health > 0)
@@ -254,6 +264,12 @@ public class Script_Enemy_Bruiser : MonoBehaviour
             //Remove self from every team list
             _AIBase.GetTeam()[i].GetComponent<Script_Enemy_Base>().RemoveFromTeam(gameObject);
         }
+    }
+
+    public void Alerted()
+    {
+        seenPlayer = true;
+        _Anim.SetBool("isAttackingPlayer", true);
     }
 
     private void resetAnimation()
@@ -334,6 +350,7 @@ public class Script_Enemy_Bruiser : MonoBehaviour
         Destroy(GetComponent<CapsuleCollider>());
         Destroy(GetComponent<NavMeshAgent>());
         Destroy(GetComponent<Rigidbody>());
+        Destroy(GetComponent<Script_Enemy_Base>());
     }
     #endregion
     #region Dodge Back Animation Controls
