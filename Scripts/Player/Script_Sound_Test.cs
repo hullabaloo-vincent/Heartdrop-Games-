@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Script_Sound_Test : MonoBehaviour {
-    // Start is called before the first frame update
-    
+public class Script_Sound_Test : MonoBehaviour {    
     void Start() {
-        FMODUnity.RuntimeManager.PlayOneShot("event:/TestTone");
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Ambience/AMB_Track_01");
     }
 }
