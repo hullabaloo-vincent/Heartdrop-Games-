@@ -2,37 +2,31 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.Rendering.HighDefinition;
 
 public class Script_Post_Update : MonoBehaviour
 {
     void Start()
     {
-        _Pp = gameObject.GetComponent<PostProcessVolume>();
-        _Pp.profile.TryGetSettings(out _Ca);
-        _Pp.profile.TryGetSettings(out _Mb);
+        _PostVolume.profile.TryGet<ChromaticAberration>(out _Ca);
 
-        _NewChrom = _DefaultChrom;
+        _CurrentChromaticAberration = _MinChromaticAberration;
         _NewMotionBlur = _DefaultMotionBlur;
     }
 
     void Update()
     {
-        if (_NewChrom > _DefaultChrom)
+       if (_CurrentChromaticAberration > _MinChromaticAberration)
         {
-            _NewChrom -= 0.01f;
+            _CurrentChromaticAberration -= 0.01f;
         }
-        if (_NewMotionBlur > _DefaultMotionBlur)
-        {
-            _NewMotionBlur -= 1.5f;
-        }
-        _Ca.intensity.value = _NewChrom;
-        _Mb.shutterAngle.value = _NewMotionBlur;
+
+        _Ca.intensity.Override (_CurrentChromaticAberration);
     }
 
     public void UpdateChromaticAberration(float newValue)
     {
-        _NewChrom = newValue;
+        _CurrentChromaticAberration = newValue;
     }
 
     public void UpdateMotionBlur(float newValue)
@@ -40,12 +34,15 @@ public class Script_Post_Update : MonoBehaviour
         _NewMotionBlur = newValue;
     }
 
-    private PostProcessVolume _Pp;
-    private ChromaticAberration _Ca;
+    public Volume _PostVolume;
+    ChromaticAberration _Ca;
     private MotionBlur _Mb;
 
-    private float _DefaultChrom = 0.034f;
-    private float _NewChrom;
+    private Pixelate _Px;
+
+    private float _MinChromaticAberration = 0.034f;
+
+    private float _CurrentChromaticAberration;
 
     private float _DefaultMotionBlur = 0f;
     private float _NewMotionBlur;
