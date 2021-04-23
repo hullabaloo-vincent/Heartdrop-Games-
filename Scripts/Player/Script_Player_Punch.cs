@@ -9,10 +9,11 @@ public class Script_Player_Punch : MonoBehaviour
         Destroy(gameObject, DestroyTime);
     }
 
-    public void SetPlayerReference(GameObject p)
+    public void SetPlayerReference(GameObject p, string hand_value)
     {
         _PlayerRef = p.GetComponent<Script_Player_Movement>();
         _Player = p;
+        _Hand = hand_value;
     }
 
     //Called on when a chain attack is more than 1
@@ -29,7 +30,7 @@ public class Script_Player_Punch : MonoBehaviour
         if (other.gameObject.tag == "Enemy" && !_DoOnce)
         {
             _DoOnce = true;
-            _PlayerRef.HitLanded();
+            _PlayerRef.HitLanded(_Hand);
             other.gameObject.GetComponentInParent<Script_Enemy_Base>().RecieveDamage(Damage);
             Rigidbody enemyRigidBody = other.gameObject.GetComponent<Rigidbody>();
 
@@ -45,4 +46,6 @@ public class Script_Player_Punch : MonoBehaviour
     private Script_Player_Movement _PlayerRef;
 
     private GameObject _Player;
+
+    private string _Hand; //"Left"; "Right"
 }

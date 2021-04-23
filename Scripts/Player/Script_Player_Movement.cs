@@ -24,19 +24,25 @@ public class Script_Player_Movement : MonoBehaviour
 
         //define movement speeds
         _MovementSpeeds = new Dictionary<string, float>(); //set movement speeds
-        _MovementSpeeds.Add("walking", 1f);
-        _MovementSpeeds.Add("running", 4f);
-        _MovementSpeeds.Add("dashing", 6f);
+        _MovementSpeeds.Add("walking", 2f);
+        _MovementSpeeds.Add("running", 5f);
+        _MovementSpeeds.Add("dashing", 20f); // this value is multiplied * 2
         _MovementSpeeds.Add("attackPunch", 8f);
         _MovementSpeeds.Add("heavyRecoil", 14f);
         _MovementSpeeds.Add("lightRecoil", 8f);
 
         //map coordinates of player limbs
         _RightHand = gameObject.transform.Find(
-            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:RightShoulder/mixamorig:RightArm/mixamorig:RightForeArm/mixamorig:RightHand"
+            "rig/c_pos/c_traj/forearm.r/hand.r"
             ).gameObject;
         _LeftHand = gameObject.transform.Find(
-            "PC_Rig/mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:LeftShoulder/mixamorig:LeftArm/mixamorig:LeftForeArm/mixamorig:LeftHand"
+            "rig/c_pos/c_traj/forearm.l/hand.l"
+            ).gameObject;
+        _RightFoot = gameObject.transform.Find(
+            "rig/c_foot_ik.r"
+            ).gameObject;
+        _LeftFoot = gameObject.transform.Find(
+            "rig/c_foot_ik.l"
             ).gameObject;
     }
 
@@ -102,41 +108,15 @@ public class Script_Player_Movement : MonoBehaviour
         if (Input.GetKey(KeyCode.Space) && _CanDash &&
         (Input.GetAxis("HorizontalKey") != 0 || Input.GetAxis("VerticalKey") != 0))
         {
-            PostUpdate.UpdateMotionBlur(360f);
+            // PostUpdate.UpdateMotionBlur(360f);
             resetAnimation();
             _Anim.SetBool("isDashing", true);
             bool selectedDash = false;
-            if (Input.GetAxis("HorizontalKey") == 1 && !selectedDash)
-            {
-                // anim.SetBool("dashRight", true);
-                _Anim.SetBool("dashForward", true);
-                selectedDash = true;
-                _DashKeyName = "horizontal";
-                _DashKeyValue = 1;
-            }
-            if (Input.GetAxis("HorizontalKey") == -1 && !selectedDash)
-            {
-                //anim.SetBool("dashLeft", true);
-                _Anim.SetBool("dashForward", true);
-                selectedDash = true;
-                _DashKeyName = "horizontal";
-                _DashKeyValue = -1;
-            }
-            if (Input.GetAxis("VerticalKey") == 1 && !selectedDash)
-            {
-                _Anim.SetBool("dashForward", true);
-                selectedDash = true;
-                _DashKeyName = "vertical";
-                _DashKeyValue = 1;
-            }
-            if (Input.GetAxis("VerticalKey") == -1 && !selectedDash)
-            {
-                _Anim.SetBool("dashBack", true);
-                selectedDash = true;
-                _DashKeyName = "vertical";
-                _DashKeyValue = -1;
-            }
-        }
+            if (Input.GetAxis("HorizontalKey") == 1 && !selectedDash) {_DashKeyName = "right";}
+            if (Input.GetAxis("HorizontalKey") == -1 && !selectedDash) {_DashKeyName = "left";}
+            if (Input.GetAxis("VerticalKey") == 1 && !selectedDash) {_DashKeyName = "forward";}
+            if (Input.GetAxis("VerticalKey") == -1 && !selectedDash) {_DashKeyName = "back";}
+    }
         #endregion
         #region Attacking and blocking
         //attacking
@@ -148,6 +128,7 @@ public class Script_Player_Movement : MonoBehaviour
                 resetAnimation();
                 _Anim.SetBool("isPunching", true);
                 int Chain = Mathf.Clamp(_ChainLevel, _MinChain, _MaxChain);
+                // This triggers an ArgumentOutOfRangeException when chain gets too high. Fix later.
                 _Anim.SetBool(_AttackCombo[Chain][Random.Range(0, _AttackCombo[Chain].Count)], true);
             }
             else
@@ -155,7 +136,6 @@ public class Script_Player_Movement : MonoBehaviour
                 if (!_ActivatedSpell && !_Anim.GetBool("isDrinking") && _CanCast)
                 {
                     resetAnimation();
-                    Debug.Log("DRINKIN' ON THE JOB ARE YE");
                     _Anim.SetBool("isDrinking", true);
                 }
                 if (_ActivatedSpell && !_Anim.GetBool("isCasting"))
@@ -240,11 +220,6 @@ public class Script_Player_Movement : MonoBehaviour
                     _Anim.SetBool("isWalking", true);
                 }
             }
-        }
-
-        if (_Anim.GetBool("isDashing"))
-        {
-            tempMoveSpeed = _MovementSpeeds["dashing"];
         }
 
         //move character
@@ -357,7 +332,7 @@ public class Script_Player_Movement : MonoBehaviour
         //Ignore collisions from instantiated gameobject
         Physics.IgnoreCollision(playerHit.GetComponent<BoxCollider>(), GetComponent<CapsuleCollider>());
         //Set spawn reference to player
-        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
+        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject, "Right");
     }
     public void punchLeft()
     {
@@ -366,10 +341,10 @@ public class Script_Player_Movement : MonoBehaviour
         //Ignore collisions from instantiated gameobject
         Physics.IgnoreCollision(playerHit.GetComponent<BoxCollider>(), GetComponent<CapsuleCollider>());
         //Set spawn reference to player
-        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject);
+        playerHit.GetComponent<Script_Player_Punch>().SetPlayerReference(gameObject, "Left");
     }
 
-    public void HitLanded()
+    public void HitLanded(string hand_value)
     {
         //If a chain is already started, stop the ongoing countdown to reset it
         if (_CanChain)
@@ -380,6 +355,22 @@ public class Script_Player_Movement : MonoBehaviour
         _ChainLevel++; //Current chain
         StartCoroutine("HitChain"); //Restart chain
         Debug.Log("Chain Level: " + _ChainLevel);
+        if (hand_value == "Left")
+        {
+            GameObject particlePrefab = Instantiate(
+                Resources.Load<GameObject>("VFX/2D_VFX/VFX_Impact_01"),
+                _LeftHand.transform.position,
+                transform.rotation
+            ) as GameObject;
+        }
+        if (hand_value == "Right")
+        {
+            GameObject particlePrefab = Instantiate(
+                Resources.Load<GameObject>("VFX/2D_VFX/VFX_Impact_01"),
+                _RightHand.transform.position,
+                transform.rotation
+            ) as GameObject;
+        }
     }
 
     //Resets chain
@@ -392,7 +383,7 @@ public class Script_Player_Movement : MonoBehaviour
         yield return 0;
     }
 
-    private void AttackForce()
+    public void AttackForce()
     {
         float strength = _MovementSpeeds["attackPunch"];
         //Move the player a tiny bit forwared with an attack 
@@ -412,6 +403,8 @@ public class Script_Player_Movement : MonoBehaviour
                 _Anim.SetBool("tookDamage_heavy", true);
                 //Move player backwards
                 _Rd.MovePosition(_Rd.position + -transform.forward * _MovementSpeeds["heavyRecoil"] * Time.deltaTime);
+                GameObject particlePrefab = Instantiate(Resources.Load<GameObject>("VFX/2D_VFX/VFX_Dustpuff_01"), PlayerBase.transform.position, transform.rotation) as GameObject;
+                particlePrefab.GetComponent<Script_Follow_Location>().SetFollowActor(gameObject, true);
             }
             else
             {
@@ -437,11 +430,37 @@ public class Script_Player_Movement : MonoBehaviour
         _Anim.SetBool("isIdle", true);
     }
     #region Dashing Animation controls
-    private void DashStart()
+    public void DashStart()
     {
         _CanDash = false;
     }
-    private void DashEnd()
+    public void DashMove() {
+        float strength = _MovementSpeeds["dashing"];
+        //Move the player a tiny bit forwared with an attack 
+        int dashDirH = 0;
+        int dashDirV = 0;
+        switch (_DashKeyName) {
+            case "forward":
+                dashDirV = 1;
+                break;
+            case "back":
+                dashDirV = -1;
+                break;
+            case "left":
+                dashDirH = -1;
+                break;
+            case "right":
+                dashDirH = 1;
+                break;
+        }
+        Vector3 rightMovement = Right * dashDirH * _MovementSpeeds["dashing"];
+        Vector3 upMovement = Forward * dashDirV * _MovementSpeeds["dashing"];
+        Vector3 transformDir = (rightMovement + upMovement);
+          
+        _Rd.MovePosition(_Rd.position + transformDir * strength * Time.deltaTime);
+    }
+
+    public void DashEnd()
     {
         resetAnimation();
         SetIdle();
@@ -449,11 +468,11 @@ public class Script_Player_Movement : MonoBehaviour
         StartCoroutine("DashCooldown");
     }
 
-    private void invincibilityStart()
+    public void invincibilityStart()
     {
         _CanTakeDamge = false;
     }
-    private void invincibilityEnd()
+    public void invincibilityEnd()
     {
         _CanTakeDamge = true;
     }
@@ -479,11 +498,26 @@ public class Script_Player_Movement : MonoBehaviour
     }
     #endregion
     #region Punch Animation Controls
-    public void startPunch()
+    // 0 = Left; 1 = Right
+    public void startPunch(float hand)
     {
         _IsPunching = true;
         _Anim.SetBool("inPunch", true);
+        GameObject currentHand = _LeftHand;
+        string particleLocation = "VFX/2D_VFX/VFX_AttackArcFlipped";
+        if (hand == 1)
+        {
+            currentHand = _RightHand;
+            particleLocation = "VFX/2D_VFX/VFX_AttackArc";
+        }
+        GameObject particlePrefab = Instantiate(
+                Resources.Load<GameObject>(particleLocation),
+                currentHand.transform.position,
+                transform.rotation
+            ) as GameObject;
+        particlePrefab.GetComponent<Script_Follow_Location>().SetFollowActor(currentHand, false);
     }
+
     public void endPunch()
     {
         _IsPunching = false;
@@ -612,6 +646,7 @@ public class Script_Player_Movement : MonoBehaviour
 
     private GameObject _RightHand;
     private GameObject _LeftHand;
+    private GameObject _RightFoot, _LeftFoot;
     public GameObject PunchObj;
     private bool _HasHit = false;
     private bool _CanChain = false;
@@ -625,4 +660,5 @@ public class Script_Player_Movement : MonoBehaviour
     private int _MaxChain = 3;
 
     private Vector3 _MovementDirection;
+    public GameObject PlayerBase;
 }
