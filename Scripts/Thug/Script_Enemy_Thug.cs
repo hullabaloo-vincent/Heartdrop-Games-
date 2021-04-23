@@ -32,8 +32,12 @@ public class Script_Enemy_Thug : MonoBehaviour
             if ((Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && _AIBase.CanSeePlayer()) ||
                 (Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= _VisibilityDistance && (_AIBase.IsPlayerWalking() || _AIBase.IsPlayerRunning())))
             {
-                seenPlayer = true;
-                _Anim.SetBool("isAttackingPlayer", true);
+                if (!_AIBase.GetAlertStatus())
+                {
+                    _AIBase.AlertTeam();
+                }
+
+                Alerted();
             }
             if (!IsDodging)
             {
@@ -198,9 +202,15 @@ public class Script_Enemy_Thug : MonoBehaviour
         GameObject playerHit = Instantiate(kickObj, _RightFoot.transform.position, _RightFoot.transform.rotation);
     }
 
+    public void Alerted()
+    {
+        seenPlayer = true;
+        _Anim.SetBool("isAttackingPlayer", true);
+    }
+
     public void RecieveDamage(float damage)
     {
-        if (!isBlocking && !_Anim.GetBool("isDying") && CanRecieveDamage)
+        if (!isBlocking && !_Anim.GetBool("isDying") && CanRecieveDamage && !_IsDead)
         {
             Health -= damage;
             if (Health > 0)
@@ -331,6 +341,7 @@ public class Script_Enemy_Thug : MonoBehaviour
         Destroy(GetComponent<CapsuleCollider>());
         Destroy(GetComponent<NavMeshAgent>());
         Destroy(GetComponent<Rigidbody>());
+        Destroy(GetComponent<Script_Enemy_Base>());
     }
     #endregion
     #region Dodge Back Animation Controls
