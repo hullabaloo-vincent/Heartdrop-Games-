@@ -39,6 +39,16 @@ public class Script_Enemy_Spawning : MonoBehaviour
         }
     }
 
+    public void SetAlertStatus(bool status)
+    {
+        _IsAlerted = status;
+    }
+
+    public bool GetAlertStatus()
+    {
+        return _IsAlerted;
+    }
+
     public void RemoveFromList(GameObject go)
     {
         _Spawned.Remove(go);
@@ -88,4 +98,5 @@ public class Script_Enemy_Spawning : MonoBehaviour
     private List<GameObject> _Spawned;
 
     private bool _SpawnedEnemies = false;
+    private bool _IsAlerted = false;
 }
