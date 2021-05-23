@@ -10,7 +10,7 @@ public class Script_Door_Open : MonoBehaviour
         _TransitionState = false;
         _InActivationRange = false;
         _PlayerRef = GameObject.FindGameObjectWithTag("Player");
-        _NotifRef = GameObject.FindGameObjectWithTag("Notification").GetComponent<Script_UI_Blur>();
+        _NotifRef = GameObject.FindGameObjectWithTag("Notification").GetComponent<CS_Notifications>();
     }
 
     void Update()
@@ -19,7 +19,6 @@ public class Script_Door_Open : MonoBehaviour
         {
             _NotifRef.SetActiveNotif(false);
             _Anim.SetBool("isOpen", true);
-            //WallObj.SetVisibility(false);
         }
     }
 
@@ -29,6 +28,7 @@ public class Script_Door_Open : MonoBehaviour
         {
             _InActivationRange = true;
             _NotifRef.SetActiveNotif(true);
+            _NotifRef.SetText("Open Door");
         }
     }
 
@@ -55,7 +55,7 @@ public class Script_Door_Open : MonoBehaviour
 
     private Animator _Anim;
     private GameObject _PlayerRef;
-    private Script_UI_Blur _NotifRef;
+    private CS_Notifications _NotifRef;
     private bool _InActivationRange;
     private bool _TransitionState;
 }

@@ -13,6 +13,8 @@ public class Script_Player_Movement : MonoBehaviour
         _Anim = GetComponent<Animator>();
         _Rd = GetComponent<Rigidbody>();
 
+        _PauseAttacks = false;
+
         InitSpells();
 
         //iso controls
@@ -26,7 +28,7 @@ public class Script_Player_Movement : MonoBehaviour
         _MovementSpeeds = new Dictionary<string, float>(); //set movement speeds
         _MovementSpeeds.Add("walking", 2f);
         _MovementSpeeds.Add("running", 5f);
-        _MovementSpeeds.Add("dashing", 20f); // this value is multiplied * 2
+        _MovementSpeeds.Add("dashing", 10f); // this value is multiplied * 2
         _MovementSpeeds.Add("attackPunch", 8f);
         _MovementSpeeds.Add("heavyRecoil", 14f);
         _MovementSpeeds.Add("lightRecoil", 8f);
@@ -120,7 +122,7 @@ public class Script_Player_Movement : MonoBehaviour
         #endregion
         #region Attacking and blocking
         //attacking
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !_PauseAttacks)
         {
             //666 = no spell selected, therefore the player will use melee
             if (SpellController.CurrentlySelected() == 666 && !_Anim.GetBool("isPunching"))
@@ -147,7 +149,7 @@ public class Script_Player_Movement : MonoBehaviour
         }
 
         //blocking
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) && !_PauseAttacks)
         {
             resetAnimation();
             _Anim.SetBool("isBlocking", true);
@@ -178,6 +180,32 @@ public class Script_Player_Movement : MonoBehaviour
             else
             {
                 SpellController.DeselectSlot(1);
+                return;
+            }
+        }
+
+        //spell selection
+        if (Input.GetKeyDown(KeyCode.Alpha2)) {
+            //666 = no spell selected
+            if (SpellController.CurrentlySelected() == 666) {
+                SpellController.SelectSpell(2);
+                _ActiveSpell = _Spell2;
+                return;
+            } else {
+                SpellController.DeselectSlot(2);
+                return;
+            }
+        }
+
+        //spell selection
+        if (Input.GetKeyDown(KeyCode.Alpha3)) {
+            //666 = no spell selected
+            if (SpellController.CurrentlySelected() == 666) {
+                SpellController.SelectSpell(3);
+                _ActiveSpell = _Spell3;
+                return;
+            } else {
+                SpellController.DeselectSlot(3);
                 return;
             }
         }
@@ -303,6 +331,10 @@ public class Script_Player_Movement : MonoBehaviour
             float turningRate = 200f;
             _Rd.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(angles), turningRate * Time.deltaTime);
         }
+    }
+
+    public void SetAttackStatus(bool status) {
+        _PauseAttacks = status;
     }
 
     public void StopFocus()
@@ -434,6 +466,13 @@ public class Script_Player_Movement : MonoBehaviour
     {
         _CanDash = false;
     }
+
+    void OnCollisionEnter(Collision collision) {
+        if (collision.gameObject.tag == "Solid" && !_CanDash) {
+            DashEnd();
+            Debug.Log("Stopping dash");
+        }
+    }
     public void DashMove() {
         float strength = _MovementSpeeds["dashing"];
         //Move the player a tiny bit forwared with an attack 
@@ -456,15 +495,15 @@ public class Script_Player_Movement : MonoBehaviour
         Vector3 rightMovement = Right * dashDirH * _MovementSpeeds["dashing"];
         Vector3 upMovement = Forward * dashDirV * _MovementSpeeds["dashing"];
         Vector3 transformDir = (rightMovement + upMovement);
-          
-        _Rd.MovePosition(_Rd.position + transformDir * strength * Time.deltaTime);
+
+        _InputVector = transformDir;
     }
 
     public void DashEnd()
     {
         resetAnimation();
         SetIdle();
-        _Rd.velocity = Vector3.zero;
+        _InputVector = Vector3.zero;
         StartCoroutine("DashCooldown");
     }
 
@@ -546,6 +585,29 @@ public class Script_Player_Movement : MonoBehaviour
         }
         resetAnimation();
         SetIdle();
+        string spellName = "VFX/Spells/Spell_" + SpellController.ActiveSpell();
+        _LoadedSpell = Resources.Load<GameObject>(spellName);
+        // Item1 = Spell casting location; Item2 = Player casting animation; Item3 = SpellDelay;
+        var spellVars = _LoadedSpell.GetComponent<SpellManager>().SpellInit();
+
+        _CastCooldown = spellVars.Item3;
+        switch (spellVars.Item1.ToString()) {
+            case "RightHand":
+                _CastLocation = _RightHand.transform.position;
+                break;
+            case "LeftHand":
+                _CastLocation = _LeftHand.transform.position;
+                break;
+            case "LeftFoot":
+                _CastLocation = _LeftFoot.transform.position;
+                break;
+            case "RightFoot":
+                _CastLocation = _RightFoot.transform.position;
+                break;
+            case "Floor":
+                _CastLocation = PlayerBase.transform.position;
+                break;
+        }
     }
     public void castEnd()
     {
@@ -554,9 +616,7 @@ public class Script_Player_Movement : MonoBehaviour
     }
     public void castSpell()
     {
-        string spellName = "VFX/Spells/Spell_" + SpellController.ActiveSpell();
-        GameObject spellToShoot = Resources.Load<GameObject>(spellName);
-        GameObject spellPrefab = Instantiate(spellToShoot, _RightHand.transform.position, transform.rotation) as GameObject;
+        GameObject spellPrefab = Instantiate(_LoadedSpell, _CastLocation, transform.rotation) as GameObject;
     }
     IEnumerator SpellCoolDownSlot1()
     {
@@ -584,7 +644,7 @@ public class Script_Player_Movement : MonoBehaviour
     }
     IEnumerator CastingCooldown()
     {
-        yield return new WaitForSeconds(60f);
+        yield return new WaitForSeconds(_CastCooldown);
         _CanCast = true;
         yield return 0;
     }
@@ -624,6 +684,9 @@ public class Script_Player_Movement : MonoBehaviour
     private string _Spell3;
 
     private string _ActiveSpell;
+    private GameObject _LoadedSpell;
+    private float _CastCooldown;
+    private Vector3 _CastLocation;
 
     private GameObject _DebugObj; //for cursor
 
@@ -643,6 +706,8 @@ public class Script_Player_Movement : MonoBehaviour
     private GameObject _EnemyMarker;
     private string _DashKeyName;
     private int _DashKeyValue;
+
+    private bool _PauseAttacks;
 
     private GameObject _RightHand;
     private GameObject _LeftHand;

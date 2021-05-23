@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
-public class Script_UI_Blur : MonoBehaviour
+public class CS_Notifications : MonoBehaviour
 {
+    private void Start() {
+        _NotifText = target.GetComponent<Text>();
+    }
+
     void Update()
     {
         if (_Expand)
@@ -27,9 +32,14 @@ public class Script_UI_Blur : MonoBehaviour
         _Expand = state;
     }
 
+    public void SetText(string newText) {
+        _NotifText.text = newText;
+    }
+
     public GameObject target;
     float smoothTime = 0.15f;
     float yVelocity = 0.0f;
     private bool _Expand = false;
     bool hasExpanded = false;
+    private Text _NotifText;
 }

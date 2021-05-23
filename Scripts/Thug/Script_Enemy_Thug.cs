@@ -48,7 +48,7 @@ public class Script_Enemy_Thug : MonoBehaviour
                 if (seenPlayer && Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) > 1.6f &&
                     !_Anim.GetBool("isAttacking"))
                 {
-                    resetAnimation();
+                    ResetAnimation();
                     _Anim.SetBool("isWalking", true);
                 }
 
@@ -67,7 +67,7 @@ public class Script_Enemy_Thug : MonoBehaviour
                 if (_AIBase.GetAgentVelocity() == new Vector3(0f, 0f, 0f) && seenPlayer && Vector3.Distance(_AIBase.GetPlayerLocation(), gameObject.transform.position) <= 1.6f &&
                     !_Anim.GetBool("isAttacking"))
                 {
-                    resetAnimation();
+                    ResetAnimation();
                     _Anim.SetBool("isIdle", true);
                 }
 
@@ -154,7 +154,7 @@ public class Script_Enemy_Thug : MonoBehaviour
                         // Debug.Log("Blocking with: " + blockChooser);
                         if (_AIBase.CanSeePlayer())
                         {
-                            resetAnimation();
+                            ResetAnimation();
                             //turn off physics forces
                             //SetRigidBodyKinematic(true);
                             if (blockChooser <= 2)
@@ -188,16 +188,16 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
 
     //Called via animation event from Anim_Player_Punch
-    public void punchRight()
+    public void PunchRight()
     {
         GameObject playerHit = Instantiate(punchObj, _RightHand.transform.position, _RightHand.transform.rotation);
     }
-    public void punchLeft()
+    public void PunchLeft()
     {
         GameObject playerHit = Instantiate(punchObj, _LeftHand.transform.position, _LeftHand.transform.rotation);
     }
 
-    public void kick()
+    public void Kick()
     {
         GameObject playerHit = Instantiate(kickObj, _RightFoot.transform.position, _RightFoot.transform.rotation);
     }
@@ -215,7 +215,7 @@ public class Script_Enemy_Thug : MonoBehaviour
             Health -= damage;
             if (Health > 0)
             {
-                resetAnimation();
+                ResetAnimation();
                 CanRecieveDamage = false;
                 _AIBase.stopMoving();
                 if (damage > 2f)
@@ -266,7 +266,7 @@ public class Script_Enemy_Thug : MonoBehaviour
         }
     }
 
-    private void resetAnimation()
+    private void ResetAnimation()
     {
         foreach (AnimatorControllerParameter parameter in _Anim.parameters)
         {
@@ -276,15 +276,15 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
 
     #region Punching Animation Controls
-    public void inPunch()
+    public void InPunch()
     {
         midPunch = true;
     }
-    public void outPunch()
+    public void OutPunch()
     {
         midPunch = false;
     }
-    public void stopPunch()
+    public void StopPunch()
     {
         _Anim.SetBool("isPunching", false);
     }
@@ -296,17 +296,17 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
     #endregion
     #region Blocking Animation Controls
-    public void blockingStart()
+    public void BlockingStart()
     {
         _AIBase.stopMoving();
         isBlocking = true;
         blockDecision = false;
     }
-    public void blockingEnd()
+    public void BlockingEnd()
     {
         isBlocking = false;
     }
-    public void turnOffBlocking()
+    public void TurnOffBlocking()
     {
         _Anim.SetBool("isBlocking", false);
     }
@@ -314,29 +314,29 @@ public class Script_Enemy_Thug : MonoBehaviour
     #region Charged Punch Animation Controls
     public void turnOff_ChargedAttack()
     {
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Damage Animation Controls
-    public void turnOff_takeDamageLight()
+    public void TurnOff_TakeDamageLight()
     {
         _AIBase.UnlockMovement();
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true);
     }
-    public void turnOff_takeDamageHeavy()
+    public void TurnOff_TakeDamageHeavy()
     {
         _AIBase.UnlockMovement();
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     #endregion
     #region Death Animation Controls
-    public void turnOffDeath()
+    public void TurnOffDeath()
     {
         _IsDead = true;
-        resetAnimation();
+        ResetAnimation();
         _AIBase.PlayerReferece().GetComponent<Script_Player_Movement>().StopFocus();
         Destroy(GetComponent<CapsuleCollider>());
         Destroy(GetComponent<NavMeshAgent>());
@@ -345,9 +345,9 @@ public class Script_Enemy_Thug : MonoBehaviour
     }
     #endregion
     #region Dodge Back Animation Controls
-    public void turnOffDodgeBack()
+    public void TurnOffDodgeBack()
     {
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true); ;
     }
     #endregion
@@ -356,12 +356,12 @@ public class Script_Enemy_Thug : MonoBehaviour
     {
         _AIBase.stopMoving();
         IsDodging = true;
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     public void DodgeBackEnd()
     {
-        resetAnimation();
+        ResetAnimation();
         IsDodging = false;
         _Anim.SetBool("isIdle", true);
     }
@@ -369,7 +369,7 @@ public class Script_Enemy_Thug : MonoBehaviour
     #region Turn off Attack
     public void TurnOffAttack()
     {
-        resetAnimation();
+        ResetAnimation();
         _Anim.SetBool("isIdle", true);
     }
     #endregion
